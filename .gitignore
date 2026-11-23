@@ -1,0 +1,3 @@
+__pycache__/
+*.plan.json
+.DS_Store

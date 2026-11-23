@@ -1,0 +1,7 @@
+{
+  "name": "rubato",
+  "version": "0.1.0",
+  "description": "Content-aware dynamic speed for video: fast where it drags, slow where it matters.",
+  "license": "MIT",
+  "keywords": ["video", "ffmpeg", "speed", "editing"]
+}
