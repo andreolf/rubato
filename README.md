@@ -2,7 +2,19 @@
 
 **Dynamic speed for video. Not 1.5x everywhere: fast where it drags, slow where it matters.**
 
-Rubato is an agent skill (Claude Code, Claude apps, Codex, Cursor, anything that reads `SKILL.md`) plus a small standalone command-line tool. You give it a baseline speed. It analyses the recording, speeds up the dull stretches, eases off on the dense ones, and races through dead air. Pitch is preserved and nothing is cut.
+Rubato is an open-source agent skill for Claude Code, Claude apps, Codex, Cursor and anything else that reads `SKILL.md`, plus a small standalone command-line tool built on ffmpeg. It applies **variable playback speed** to a video or audio file based on its content: you give it a baseline speed, it analyses the recording, speeds up the boring parts, slows down for the important parts, and races through silence. Pitch is preserved and nothing is cut.
+
+Good for lectures, talks, meeting recordings, screen recordings, tutorials, demos, podcasts and voice memos.
+
+**Install by asking your agent:**
+
+> Install the rubato skill from https://github.com/andreolf/rubato
+
+**Or from a terminal:**
+
+```bash
+npx skills add andreolf/rubato
+```
 
 ```
 source   25:16  ->  output 18:50   (effective 1.341x; flat 1.2x would give 21:04)
@@ -83,6 +95,40 @@ python3 skills/rubato/scripts/rubato.py render talk.mp4 plan.json -o talk.rubato
 ```
 
 Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--spread 0.3` (how much of the video leaves the baseline), `--min-segment 2` (shortest stretch at its own speed), `--plan-only`. `plan.json` is a plain list of `{start, end, speed}` segments and can be edited by hand. `remap-srt` retimes subtitles to match. Audio files work too.
+
+## FAQ
+
+### Is there a Claude skill that speeds up only the boring parts of a video?
+
+Yes, this one. Rubato analyses the recording and assigns each stretch its own speed, instead of applying one multiplier to the whole file.
+
+### How is this different from watching at 1.5x?
+
+A flat 1.5x rushes the parts you need to follow and still wastes time on the parts you don't. Rubato keeps dense passages at 1.0x, ordinary ones at 1.2x, dull ones at 1.5x and dead air at 2x, so the result is usually shorter than flat 1.2x and easier to follow than flat 1.5x.
+
+### How is this different from silence removal or jump cuts (auto-editor, "remove silence" tools)?
+
+Those tools cut content out, which produces visible jumps and loses pauses entirely. Rubato never removes anything; it only changes speed, so the video stays continuous and subtitles can be retimed exactly.
+
+### How does it know what is boring?
+
+Two layers. The script measures loudness, pauses, speech density and on-screen change with ffmpeg. Then the agent reads the transcript and marks passages as key or filler, and those marks override the measurements. Without a transcript only the first layer runs.
+
+### Does the audio sound like a chipmunk?
+
+No. Speed changes are time-stretched with ffmpeg's `atempo`, which keeps the pitch.
+
+### Can I choose the speeds?
+
+Yes: `--base`, `--fast`, `--slow` and `--silence`. You can also edit the generated `plan.json` by hand, or give exact speeds for exact time ranges in `marks.json`.
+
+### Does it work without Claude?
+
+Yes. `rubato.py` is a single Python file with no dependencies beyond ffmpeg.
+
+### Does it work on audio only, such as podcasts?
+
+Yes. Give it an audio file and an audio output name.
 
 ## Limits
 
