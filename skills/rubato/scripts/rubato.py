@@ -592,6 +592,21 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
     if out:
         out[-1]["end"] = round(dur, 3)
 
+    # ---- one flat speed: asked for, or because varying it would do harm -------
+    flat = getattr(o, "flat", None)
+    constant_sound = bool(rms) and thr is None and getattr(o, "silence_db", None) is None
+    if flat:
+        out = [{"start": 0.0, "end": round(dur, 3), "speed": round(float(flat), 2), "reason": "flat"}]
+        highlights = []
+        notes[:] = [f"flat speed {float(flat):g}x requested: nothing varies except explicit marks"]
+    elif constant_sound and not highlights and not marks:
+        # Music, or speech over a steady bed with nothing recognised as key: changing
+        # speed every few seconds would only make the tempo lurch.
+        out = [{"start": 0.0, "end": round(dur, 3), "speed": round(o.base, 2), "reason": "flat"}]
+        notes[:] = [f"the sound level is nearly constant (music or steady background) and no key "
+                    f"passages were found, so one flat speed ({o.base:g}x) is used. "
+                    f"Use --flat to choose it, or --marks / --silence-db to vary it anyway"]
+
     # ---- what is being said beats how it sounds; explicit marks beat both ------
     label_speed = {"key": o.slow, "slow": o.slow, "normal": o.base, "base": o.base,
                    "filler": o.fast, "fast": o.fast, "skip": o.silence}
@@ -639,6 +654,12 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
             else:
                 tidy.append(s)
         out = tidy
+
+    cap = getattr(o, "max_speed", None)
+    if cap:
+        for s in out:
+            s["speed"] = round(min(s["speed"], float(cap)), 2)
+        notes.append(f"speeds capped at {float(cap):g}x")
 
     plan = {"rubato": 1, "source": an.get("source"), "duration": round(dur, 3), "fps": an.get("fps"),
             "settings": {"slow": o.slow, "base": o.base, "fast": o.fast, "silence": o.silence,
@@ -724,7 +745,15 @@ def summary(plan: dict, width: int = 64) -> str:
         for h in hl:
             kinds[h["kind"]] = kinds.get(h["kind"], 0) + 1
         lines.append("content  " + ", ".join(f"{v} {k}" for k, v in sorted(kinds.items()))
-                     + "   (from the transcript; listed in the plan under \"highlights\")")
+                     + "   (from the transcript)")
+        st_ = plan.get("settings", {})
+        shown = hl[:15]
+        for h in shown:
+            sp = st_.get("fast") if h["kind"] == "filler" else st_.get("slow")
+            text = h["text"] if len(h["text"]) <= 88 else h["text"][:85].rstrip() + "…"
+            lines.append(f"  {fmt_time(h['start']):>7}  {sp:g}x  {h['kind']:<8}  {text}")
+        if len(hl) > len(shown):
+            lines.append(f"  … and {len(hl) - len(shown)} more, listed in the plan under \"highlights\"")
     for note in plan.get("notes", []):
         lines.append(f"note     {note}")
     return "\n".join(lines)
@@ -733,6 +762,38 @@ def summary(plan: dict, width: int = 64) -> str:
 # --------------------------------------------------------------------------
 # transcribe
 # --------------------------------------------------------------------------
+
+def _clear_model_cache(model: str) -> None:
+    """Remove a half-downloaded faster-whisper model so the next attempt starts clean."""
+    root = os.path.join(os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"), "hub")
+    target = os.path.join(root, f"models--Systran--faster-whisper-{model}")
+    if os.path.isdir(target) and os.path.realpath(target).startswith(os.path.realpath(root)):
+        shutil.rmtree(target, ignore_errors=True)
+
+
+def transcript_health(path: str, cues: list, duration: float) -> str | None:
+    """Say so when the transcript is too thin to trust for picking key passages."""
+    words = sum(len(t.split()) for _, _, t in cues)
+    minutes = max(duration, 1.0) / 60.0
+    longest = 0.0
+    if path.lower().endswith(".json"):
+        try:
+            data = load_json(path)
+            segs = data.get("segments", []) if isinstance(data, dict) else data
+            longest = max((float(x["end"]) - float(x["start"]) for x in segs), default=0.0)
+        except Exception:
+            longest = 0.0
+    if words == 0:
+        return "the transcript is empty: no speech was recognised, so nothing was picked by content"
+    if words / minutes < 30:
+        return (f"the transcript has only {words} words for {fmt_time(duration)}: speech-to-text "
+                "probably failed (music, noise or an unexpected language), so few or no passages "
+                "were picked by content")
+    if longest > 30:
+        return (f"the transcript has a single {longest:.0f}-second segment, which usually means the "
+                "timing is unreliable; passages picked by content may be misplaced")
+    return None
+
 
 def transcribe(ffmpeg: str, src: str, dst: str, model: str = "base",
                language: str | None = None) -> bool:
@@ -756,7 +817,22 @@ def transcribe(ffmpeg: str, src: str, dst: str, model: str = "base",
                 pcm = w.readframes(w.getnframes())
             # Hand over samples, not a path: avoids the engine's own decoder and its version quirks.
             audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
-            wm = WhisperModel(model, compute_type="int8")
+            wm = None
+            for attempt in (model, model, "base"):
+                try:
+                    wm = WhisperModel(attempt, compute_type="int8")
+                    if attempt != model:
+                        print(f"rubato: model '{model}' could not be loaded; using 'base' instead",
+                              file=sys.stderr)
+                    break
+                except Exception as exc:  # broken or partial download, no network, bad name
+                    print(f"rubato: loading speech model '{attempt}' failed ({type(exc).__name__}: "
+                          f"{str(exc)[:120]})", file=sys.stderr)
+                    _clear_model_cache(attempt)
+            if wm is None:
+                print("rubato: no speech model available; continuing without a transcript",
+                      file=sys.stderr)
+                return False
             segs, info = wm.transcribe(audio, language=language, vad_filter=True,
                                        word_timestamps=True)
             data = {"language": info.language,
@@ -889,7 +965,9 @@ def render(ffmpeg: str, src: str, plan: dict, out: str, o: argparse.Namespace) -
         die("output would overwrite the input")
 
     with tempfile.TemporaryDirectory(prefix="rubato-") as tmp:
-        cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-stats", "-y"]
+        # A live progress line is useful in a terminal and noise in a log or an agent's output.
+        progress = "-stats" if sys.stderr.isatty() else "-nostats"
+        cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", progress, "-y"]
         maps, codec = [], []
         if want_video:
             cmd += ["-i", src]
@@ -992,6 +1070,11 @@ def add_plan_opts(p: argparse.ArgumentParser) -> None:
                    help="margin kept at speech speed around each pause, seconds (default 0.12)")
     g.add_argument("--silence-db", type=float, default=None,
                    help="pause threshold in dBFS (default: adaptive)")
+    g.add_argument("--flat", type=float, default=None,
+                   help="one flat speed for the whole file (for music, or when you just want it "
+                        "faster); explicit --marks still apply")
+    g.add_argument("--max", dest="max_speed", type=float, default=None,
+                   help="never go faster than this, e.g. 1.3 for a short talking-head video")
     g.add_argument("--busy-motion", type=float, default=0.03,
                    help="scene-change score above which a quiet stretch counts as on-screen action")
     g.add_argument("--marks", help="JSON list of {start, end, label|speed} overrides")
@@ -1034,7 +1117,12 @@ def plan_from_args(an: dict, a: argparse.Namespace) -> dict:
         if not a.no_content:
             extra = load_json(a.cues) if a.cues else None
             highlights = find_highlights(sentences(cues), an["duration"], extra, a.max_key_share)
+        health = transcript_health(a.transcript, cues, an["duration"])
+    else:
+        health = None
     plan = build_plan(an, a, marks, words, highlights)
+    if health:
+        plan["notes"].append(health)
     if not a.transcript:
         plan["notes"].append("no transcript: speeds follow sound and picture only, not what is said")
     return plan
