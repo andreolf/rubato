@@ -26,7 +26,8 @@ MAX_MINUTES = float(os.environ.get("RUBATO_MAX_MINUTES", "15"))
 MAX_MB = float(os.environ.get("RUBATO_MAX_MB", "500"))
 MODEL = os.environ.get("RUBATO_MODEL", "base")
 KEEP_SECONDS = 30 * 60
-SITE_URL = os.environ.get("RUBATO_SITE_URL", "").rstrip("/")
+SITE_URL = (os.environ.get("RUBATO_SITE_URL")
+            or ("https://" + os.environ["SPACE_HOST"] if os.environ.get("SPACE_HOST") else "")).rstrip("/")
 REPO = "https://github.com/andreolf/rubato"
 WORK = os.path.join(tempfile.gettempdir(), "rubato-web")
 os.makedirs(WORK, exist_ok=True)
