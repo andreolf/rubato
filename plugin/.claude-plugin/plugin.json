@@ -5,6 +5,7 @@
   "author": { "name": "Oui Capital", "url": "https://www.tryrubato.com" },
   "license": "MIT",
   "homepage": "https://www.tryrubato.com",
+  "privacyPolicyUrl": "https://www.tryrubato.com/privacy",
   "repository": "https://github.com/andreolf/rubato",
   "keywords": ["video", "audio", "speed", "transcript", "editing"],
   "icon": ".claude-plugin/icon.png",
