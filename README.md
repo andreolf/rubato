@@ -6,6 +6,8 @@ Rubato is an open-source agent skill for Claude Code, Claude apps, Codex, Cursor
 
 Good for lectures, talks, meeting recordings, screen recordings, tutorials, demos, podcasts and voice memos.
 
+**Try it in your browser, no install:** https://andreolf-rubato.hf.space
+
 **Install by asking your agent:**
 
 > Install the rubato skill from https://github.com/andreolf/rubato
@@ -91,7 +93,7 @@ It exposes three tools that work on files on your machine:
 
 ## Web demo
 
-`space/` holds a landing page with an upload box and a small job API (FastAPI), ready to deploy as a Docker app, for example on a Hugging Face Space. Run it locally:
+Live at https://andreolf-rubato.hf.space (files up to 15 minutes). `space/` holds its source: a landing page with an upload box and a small job API (FastAPI), deployed as a Docker app on a Hugging Face Space with `sh space/deploy.sh`. Run it locally:
 
 ```bash
 uv run --with fastapi --with uvicorn --with python-multipart --with faster-whisper --with imageio-ffmpeg space/app.py
