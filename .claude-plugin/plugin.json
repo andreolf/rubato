@@ -1,7 +1,9 @@
 {
   "name": "rubato",
   "version": "0.4.0",
-  "description": "Content-aware dynamic speed for video: fast where it drags, slow where it matters.",
+  "description": "Speed up videos dynamically: slow for the takeaways, fast through filler and silence. Nothing is cut.",
   "license": "MIT",
+  "homepage": "https://www.tryrubato.com",
+  "repository": "https://github.com/andreolf/rubato",
   "keywords": ["video", "ffmpeg", "speed", "editing"]
 }
