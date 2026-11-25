@@ -1,0 +1,30 @@
+name: Feedback
+description: Tell us how Rubato worked on your video, good or bad
+title: "Feedback: "
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for trying Rubato. The most useful feedback is about what it slowed down or sped up that it should not have.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you use it?
+      options:
+        - Web demo (tryrubato.com)
+        - Claude skill
+        - MCP server
+        - Command line
+    validations:
+      required: true
+  - type: input
+    id: kind
+    attributes:
+      label: What kind of recording was it?
+      placeholder: A 30-minute conference talk, a team meeting, a tutorial…
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Which passages got the wrong speed? What did it miss? What worked well?
+    validations:
+      required: true

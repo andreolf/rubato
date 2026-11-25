@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest something Rubato should do
+title: "Feature: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What would you like Rubato to do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What are you trying to get done?
+      description: The situation behind the request helps more than the solution.
