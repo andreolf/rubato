@@ -408,7 +408,8 @@ def _base_url() -> str:
 
 if mcp_server is not None:
     @mcp_server.tool(title="Speed up a video dynamically",
-                     annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False,
+                     annotations=ToolAnnotations(title="Speed up a video dynamically",
+                                                 readOnlyHint=False, destructiveHint=False,
                                                  idempotentHint=False, openWorldHint=True))
     def speed_up_video(video_url: str, base: float = 1.2, slow: float = 1.0, fast: float = 1.5,
                        silence: float = 2.0, language: str = "") -> dict:
@@ -445,7 +446,8 @@ if mcp_server is not None:
                 "next": "Call get_result with this job_id every few seconds until stage is 'done'."}
 
     @mcp_server.tool(title="Get the result of a speed-up job",
-                     annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=False))
+                     annotations=ToolAnnotations(title="Get the result of a speed-up job",
+                                                 readOnlyHint=True, openWorldHint=False))
     def get_result(job_id: str) -> dict:
         """Check a job started with speed_up_video.
 
