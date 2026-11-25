@@ -3,3 +3,6 @@ __pycache__/
 .DS_Store
 *.transcript.json
 .claude/
+*.egg-info/
+build/
+dist/

@@ -1,8 +1,8 @@
 # Rubato
 
-**Dynamic speed for video. Not 1.5x everywhere: slow for the takeaways, fast through the filler.**
+**Speed up your videos dynamically and save time. Not 1.5x everywhere: slow for the takeaways, fast through the filler.**
 
-Rubato is an open-source agent skill for Claude Code, Claude apps, Codex, Cursor and anything else that reads `SKILL.md`, plus a small standalone command-line tool built on ffmpeg. It applies **variable playback speed** to a video or audio file based on what is being said: you give it a baseline speed, it transcribes the recording, slows down for the takeaways, lists and key numbers, speeds up the filler and rambling, and races through silence. Pitch is preserved and nothing is cut.
+Rubato is an open-source agent skill for Claude Code, Claude apps, Codex, Cursor and anything else that reads `SKILL.md`, an MCP server, a command-line tool built on ffmpeg, and a web demo. It applies **variable playback speed** to a video or audio file based on what is being said: you give it a baseline speed, it transcribes the recording, slows down for the takeaways, lists and key numbers, speeds up the filler and rambling, and races through silence. Pitch is preserved and nothing is cut.
 
 Good for lectures, talks, meeting recordings, screen recordings, tutorials, demos, podcasts and voice memos.
 
@@ -60,9 +60,55 @@ Or copy `skills/rubato` into `~/.claude/skills/`.
 
 Then ask for it in plain words: "speed this lecture up, but smartly", "tighten this screen recording, slow down for the important parts".
 
+## Use as an MCP server
+
+For Claude Desktop, Claude Code, Cursor and any other MCP client. Nothing to install first; [uv](https://docs.astral.sh/uv/) fetches it:
+
+```json
+{
+  "mcpServers": {
+    "rubato": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/andreolf/rubato", "rubato-mcp"]
+    }
+  }
+}
+```
+
+In Claude Code:
+
+```bash
+claude mcp add rubato -- uvx --from git+https://github.com/andreolf/rubato rubato-mcp
+```
+
+It exposes three tools that work on files on your machine:
+
+| Tool | What it does |
+| --- | --- |
+| `rubato_plan` | Transcribes, finds pauses, picks takeaways, lists and filler, and returns the speed map. Accepts marks. |
+| `rubato_transcript` | Returns the timestamped transcript so the model can find what phrase matching missed. |
+| `rubato_render` | Renders the file from the plan. |
+
+## Web demo
+
+`space/` holds a landing page with an upload box and a small job API (FastAPI), ready to deploy as a Docker app, for example on a Hugging Face Space. Run it locally:
+
+```bash
+uv run --with fastapi --with uvicorn --with python-multipart --with faster-whisper --with imageio-ffmpeg space/app.py
+```
+
 ## Use as a CLI
 
-The simplest way needs only [uv](https://docs.astral.sh/uv/). It brings ffmpeg and a speech-to-text model with it (about 150 MB on first run):
+Run it straight from GitHub, with ffmpeg and speech-to-text included:
+
+```bash
+uvx --from git+https://github.com/andreolf/rubato rubato auto talk.mp4
+```
+
+Or from a clone of this repository:
+
+
+This needs only [uv](https://docs.astral.sh/uv/). It brings ffmpeg and a speech-to-text model with it (about 150 MB on first run):
 
 ```bash
 uv run --with faster-whisper --with imageio-ffmpeg skills/rubato/scripts/rubato.py auto talk.mp4
@@ -119,6 +165,10 @@ No. Speed changes are time-stretched with ffmpeg's `atempo`, which keeps the pit
 ### Can I choose the speeds?
 
 Yes: `--base`, `--fast`, `--slow` and `--silence`. You can also edit the generated `plan.json` by hand, or give exact speeds for exact time ranges in `marks.json`.
+
+### Is there an MCP server for speeding up videos?
+
+Yes. Rubato ships one: `uvx --from git+https://github.com/andreolf/rubato rubato-mcp`. See "Use as an MCP server" above.
 
 ### Does it work without Claude?
 

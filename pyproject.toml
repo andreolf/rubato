@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rubato-speed"
+version = "0.3.0"
+description = "Speed up videos dynamically: slow for the takeaways, fast through filler and silence."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["video", "ffmpeg", "speed", "variable speed", "mcp", "claude", "agent skill"]
+dependencies = ["imageio-ffmpeg", "faster-whisper", "mcp>=1.2"]
+
+[project.urls]
+Homepage = "https://github.com/andreolf/rubato"
+
+[project.scripts]
+rubato = "rubato:cli"
+rubato-mcp = "rubato_mcp:main"
+
+[tool.setuptools]
+py-modules = ["rubato", "rubato_mcp"]
+package-dir = { "" = "skills/rubato/scripts" }

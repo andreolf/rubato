@@ -61,7 +61,8 @@ def find_ffmpeg(explicit: str | None) -> str:
 def probe(ffmpeg: str, path: str) -> dict:
     if not os.path.exists(path):
         die(f"input not found: {path}")
-    p = subprocess.run([ffmpeg, "-hide_banner", "-i", path], capture_output=True, text=True)
+    p = subprocess.run([ffmpeg, "-hide_banner", "-nostdin", "-i", path], capture_output=True, text=True,
+                       stdin=subprocess.DEVNULL)
     err = p.stderr
     m = re.search(r"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)", err)
     if not m:
@@ -90,7 +91,8 @@ def fps_arg(fps: float | None) -> str:
 def read_metadata_stream(cmd: list, key: str) -> list:
     """Run ffmpeg with a (a)metadata=print:file=- filter; return [(time, value)]."""
     out = []
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True)
     t = None
     assert proc.stdout is not None
     for line in proc.stdout:
@@ -381,24 +383,22 @@ def find_highlights(cues: list, duration: float, extra: dict | None = None,
                 kinds[kind] = kinds.get(kind, 0) + w
         if score >= 2:
             kind = max(kinds, key=lambda k: kinds[k])
-            end, txt = e, text
+            end, idx = e, {i}
             # "Here is the key takeaway." is a lead-in: the content is the next sentence.
             if len(words) < 12 and i + 1 < n and cues[i + 1][0] - e < 2.0:
-                end, txt = cues[i + 1][1], text + " " + cues[i + 1][2]
-            found.append({"start": s, "end": end, "kind": kind, "text": txt.strip(), "w": score})
+                end, idx = cues[i + 1][1], {i, i + 1}
+            found.append({"start": s, "end": end, "kind": kind, "idx": idx, "w": score})
         elif any(rx.search(low) for rx in filler_cues) or (
                 len(words) >= 4 and len(HESITATION.findall(low)) / len(words) >= 0.2):
-            found.append({"start": s, "end": e, "kind": "filler", "text": text.strip(), "w": 0})
+            found.append({"start": s, "end": e, "kind": "filler", "idx": {i}, "w": 0})
 
     keys = sorted((h for h in found if h["kind"] != "filler"), key=lambda h: h["start"])
     merged = []
     for h in keys:
         if merged and h["start"] - merged[-1]["end"] < 1.0:
             m = merged[-1]
-            if h["end"] > m["end"]:
-                if h["text"] not in m["text"]:
-                    m["text"] += " " + h["text"]
-                m["end"] = h["end"]
+            m["end"] = max(m["end"], h["end"])
+            m["idx"] = m["idx"] | h["idx"]
             m["w"] = max(m["w"], h["w"])
         else:
             merged.append(dict(h))
@@ -410,7 +410,10 @@ def find_highlights(cues: list, duration: float, extra: dict | None = None,
             budget -= h["end"] - h["start"]
     fillers = [h for h in found if h["kind"] == "filler"
                and not any(k["start"] < h["end"] and h["start"] < k["end"] for k in kept)]
-    return sorted(fillers + kept, key=lambda h: h["start"])
+    out = sorted(fillers + kept, key=lambda h: h["start"])
+    for h in out:
+        h["text"] = " ".join(cues[i][2].strip() for i in sorted(h.pop("idx")))
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -805,7 +808,8 @@ def atempo_chain(v: float) -> str:
 
 
 def run(cmd: list, what: str) -> None:
-    p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    p = subprocess.run(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.PIPE, text=True)
     if p.returncode != 0:
         die(f"ffmpeg failed while {what}:\n{p.stderr.strip()[-1200:]}")
 
@@ -931,7 +935,7 @@ def render(ffmpeg: str, src: str, plan: dict, out: str, o: argparse.Namespace) -
                     codec += ["-movflags", "+faststart"]
         cmd += maps + codec + ["-t", f"{total:.3f}", out]
         print("rubato: encoding…", file=sys.stderr)
-        p = subprocess.run(cmd)
+        p = subprocess.run(cmd, stdin=subprocess.DEVNULL, stdout=sys.stderr)
         if p.returncode != 0:
             die("ffmpeg failed while encoding (see message above)")
     print(f"rubato: wrote {out}", file=sys.stderr)
@@ -1125,10 +1129,14 @@ def main() -> None:
             render(ff, a.input, plan, out, a)
 
 
-if __name__ == "__main__":
+def cli() -> None:
     try:
         main()
     except (OSError, json.JSONDecodeError, KeyError) as exc:
         die(f"{type(exc).__name__}: {exc}")
     except KeyboardInterrupt:
         die("interrupted")
+
+
+if __name__ == "__main__":
+    cli()

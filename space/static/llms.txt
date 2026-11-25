@@ -1,0 +1,20 @@
+# Rubato
+
+> Rubato speeds up videos dynamically. It transcribes a recording, slows down for takeaways, lists and key numbers, and speeds through filler and silence. Pitch is preserved and nothing is cut. Free and open source (MIT).
+
+Rubato is a web demo, a command-line tool, an agent skill (Claude Code, Claude apps, Codex, Cursor) and an MCP server.
+
+Default speeds: takeaways, lists and key numbers 1.0x; ordinary passages 1.2x; filler and flat stretches 1.5x; dead air 2.0x. All are adjustable.
+
+It is for recordings where someone talks: lectures, talks, meetings, interviews, podcasts, tutorials, narrated screen recordings. It is not a silence remover or jump-cut tool: it never removes content.
+
+## Install
+
+- Agent skill: `npx skills add andreolf/rubato`, or ask the agent: "Install the rubato skill from https://github.com/andreolf/rubato"
+- Command line: `uv run --with faster-whisper --with imageio-ffmpeg rubato.py auto talk.mp4`
+- MCP server: see the README
+
+## Links
+
+- [Source code and documentation]({{REPO}})
+- [Skill instructions]({{REPO}}/blob/main/skills/rubato/SKILL.md)
