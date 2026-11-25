@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.andreolf/rubato",
+  "title": "Rubato",
+  "description": "Speed up videos dynamically: slow for takeaways, fast through filler and silence. Nothing is cut.",
+  "repository": {
+    "url": "https://github.com/andreolf/rubato",
+    "source": "github"
+  },
+  "websiteUrl": "https://www.tryrubato.com",
+  "version": "0.4.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://www.tryrubato.com/mcp"
+    }
+  ]
+}

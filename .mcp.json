@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rubato": {
+      "type": "http",
+      "url": "https://www.tryrubato.com/mcp"
+    }
+  }
+}

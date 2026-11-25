@@ -5,7 +5,7 @@
     {
       "name": "rubato",
       "source": "./",
-      "description": "Content-aware dynamic speed for video: fast where it drags, slow where it matters."
+      "description": "Speed up videos dynamically: slow for the takeaways, fast through filler and silence. Nothing is cut."
     }
   ]
 }
