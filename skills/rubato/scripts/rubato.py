@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """rubato - content-aware dynamic speed for video and audio.
 
-Instead of one flat multiplier, rubato plays the dull stretches faster and the
-dense or lively stretches slower, around a baseline you choose.
+Instead of one flat multiplier, rubato slows down for what matters (takeaways,
+lists, key numbers, found by reading the transcript) and speeds through filler,
+dull stretches and dead air, around a baseline you choose.
 
     rubato.py auto    talk.mp4 -o talk.rubato.mp4
+    rubato.py transcribe talk.mp4 -o talk.transcript.json
     rubato.py analyze talk.mp4 -o analysis.json
     rubato.py plan    analysis.json -o plan.json [--marks marks.json] [--transcript talk.srt]
     rubato.py render  talk.mp4 plan.json -o out.mp4
@@ -262,6 +264,25 @@ def parse_cues(path: str) -> list:
     return cues
 
 
+def sentences(cues: list, max_len: float = 20.0) -> list:
+    """Regroup cues (words, or caption lines that break mid-sentence) into sentences."""
+    out, cur = [], []
+
+    def flush() -> None:
+        if cur:
+            out.append((cur[0][0], cur[-1][1], " ".join(c[2] for c in cur if c[2])))
+            cur.clear()
+
+    for s, e, text in cues:
+        if cur and (s - cur[-1][1] > 1.2 or e - cur[0][0] > max_len):
+            flush()
+        cur.append((s, e, text.strip()))
+        if text.rstrip().endswith((".", "?", "!", "…", "。", "？", "！")):
+            flush()
+    flush()
+    return out
+
+
 def word_times(cues: list) -> list:
     out = []
     for s, e, text in cues:
@@ -287,11 +308,113 @@ def load_marks(path: str) -> list:
 
 
 # --------------------------------------------------------------------------
+# reading the transcript: takeaways, lists, numbers, filler
+# --------------------------------------------------------------------------
+
+NUM = r"(?:\d+|two|three|four|five|six|seven|eight|nine|ten|a few|several|a couple of)"
+ORD = r"(?:first|second|third|fourth|fifth|sixth|last|final)"
+THING = (r"(?:things?|reasons?|ways?|steps?|tips?|rules?|points?|lessons?|mistakes?|types?|kinds?|"
+         r"options?|parts?|principles?|questions?|factors?|categories|takeaways?|ideas?|problems?)")
+
+KEY_CUES = [
+    ("takeaway", 2, r"\btake[- ]?aways?\b"),
+    ("takeaway", 2, r"\b(bottom line|long story short|tl;?dr|rule of thumb|pro tip|golden rule|lessons? learned)\b"),
+    ("takeaway", 2, r"\b(in summary|to summari[sz]e|to sum (it )?up|in conclusion|to recap|to wrap up)\b"),
+    ("takeaway", 2, r"\bthe (one |single )?(main|key|important|big|biggest|whole|real|core|critical|crucial|only) "
+                    r"(point|thing|idea|lesson|insight|message|question|problem|difference|reason|trick)\b"),
+    ("takeaway", 2, r"\b(most|really|very|super|extremely|incredibly) important\b"),
+    ("takeaway", 2, r"\b(remember|keep in mind|don'?t forget|never forget|pay attention|write (this|that) down)\b"),
+    ("takeaway", 2, r"\b(here'?s|this is|that'?s) (the thing|the deal|what matters|the trick|the secret|the point|the catch)\b"),
+    ("takeaway", 2, r"\bwhat (this|that|it) (really |actually )?means\b"),
+    ("takeaway", 2, r"\b(let me|i'?ll|i will|i want to) (repeat|say (that|it|this) again|be (very )?clear|stress|emphasi[sz]e)\b"),
+    ("takeaway", 1, r"\b(in other words|the point is|the trick is|the secret is|the answer is|the reason is|make sure|note that)\b"),
+    ("takeaway", 1, r"\b(crucial|critical|essential|fundamental|important(ly)?|key)\b"),
+    ("list", 2, r"\b" + NUM + r" (?:\w+ ){0,2}" + THING + r"\b"),
+    ("list", 2, r"\b(number|step|rule|tip|point|reason|lesson|option|part|mistake) "
+                r"(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b"),
+    ("list", 2, r"\b(firstly|secondly|thirdly|lastly)\b"),
+    ("list", 2, r"\b(the )?" + ORD + r" (one|thing|point|reason|step|rule|tip|lesson|mistake|is|was)\b"),
+    ("list", 1, r"\b(first|second|third|fourth|fifth|finally|next|then|last)[,:]"),
+    ("list", 1, r"\b(first of all|to begin with|on top of that|and finally|last but not least)\b"),
+    ("number", 1, r"\d[\d,.]* ?(%|percent\b|x\b|times\b)"),
+    ("number", 1, r"[$€£] ?\d|\b\d[\d,.]* ?(dollars|euros|million|billion|thousand)\b"),
+    ("number", 1, r"\b(doubled|tripled|halved|twice as|half as)\b"),
+]
+FILLER_CUES = [
+    r"\bcan (you|everyone|everybody|you all|you guys) (hear|see)\b",
+    r"\b(share|sharing) my screen\b|\bis this (thing )?on\b|\bam i (on mute|muted)\b|\byou'?re (on mute|muted)\b",
+    r"\b(one sec(ond)?|hold on|hang on|bear with me|give me a (sec(ond)?|moment|minute)|just a (sec(ond)?|moment|minute))\b",
+    r"\b(where was i|sorry about that|technical (difficulties|issues)|let me (just )?(find|pull up|open|check|see if))\b",
+    r"\b(still loading|is loading|waiting for (it|this|that|the))\b",
+    r"\b(like and subscribe|hit (the|that) (bell|like)|sponsor(ed)? (of|by)|use (the )?code)\b",
+    r"\b(before we (start|begin|get started)|housekeeping|welcome (back|everyone|everybody)|thanks for (joining|watching|coming|tuning in))\b",
+]
+HESITATION = re.compile(r"\b(um+|uh+|erm+|hmm+|you know|i mean|sort of|kind of|so yeah|okay so)\b")
+
+
+def find_highlights(cues: list, duration: float, extra: dict | None = None,
+                    max_share: float = 0.5) -> list:
+    """Spot what is worth slowing down for (takeaways, lists, numbers) and what
+    is not (logistics, hesitation), from transcript text alone."""
+    key_cues = [(k, w, re.compile(rx)) for k, w, rx in KEY_CUES]
+    filler_cues = [re.compile(rx) for rx in FILLER_CUES]
+    for rx in (extra or {}).get("key", []):
+        key_cues.append(("takeaway", 2, re.compile(rx)))
+    for rx in (extra or {}).get("filler", []):
+        filler_cues.append(re.compile(rx))
+
+    found = []
+    n = len(cues)
+    for i, (s, e, text) in enumerate(cues):
+        low = text.lower()
+        words = low.split()
+        if not words or e <= s:
+            continue
+        score, kinds = 0, {}
+        for kind, w, rx in key_cues:
+            if rx.search(low):
+                score += w
+                kinds[kind] = kinds.get(kind, 0) + w
+        if score >= 2:
+            kind = max(kinds, key=lambda k: kinds[k])
+            end, txt = e, text
+            # "Here is the key takeaway." is a lead-in: the content is the next sentence.
+            if len(words) < 12 and i + 1 < n and cues[i + 1][0] - e < 2.0:
+                end, txt = cues[i + 1][1], text + " " + cues[i + 1][2]
+            found.append({"start": s, "end": end, "kind": kind, "text": txt.strip(), "w": score})
+        elif any(rx.search(low) for rx in filler_cues) or (
+                len(words) >= 4 and len(HESITATION.findall(low)) / len(words) >= 0.2):
+            found.append({"start": s, "end": e, "kind": "filler", "text": text.strip(), "w": 0})
+
+    keys = sorted((h for h in found if h["kind"] != "filler"), key=lambda h: h["start"])
+    merged = []
+    for h in keys:
+        if merged and h["start"] - merged[-1]["end"] < 1.0:
+            m = merged[-1]
+            if h["end"] > m["end"]:
+                if h["text"] not in m["text"]:
+                    m["text"] += " " + h["text"]
+                m["end"] = h["end"]
+            m["w"] = max(m["w"], h["w"])
+        else:
+            merged.append(dict(h))
+    # If everything is a highlight, nothing is: keep the strongest up to a share of the runtime.
+    budget, kept = duration * max_share, []
+    for h in sorted(merged, key=lambda h: -h["w"]):
+        if budget - (h["end"] - h["start"]) >= 0 or not kept:
+            kept.append(h)
+            budget -= h["end"] - h["start"]
+    fillers = [h for h in found if h["kind"] == "filler"
+               and not any(k["start"] < h["end"] and h["start"] < k["end"] for k in kept)]
+    return sorted(fillers + kept, key=lambda h: h["start"])
+
+
+# --------------------------------------------------------------------------
 # plan
 # --------------------------------------------------------------------------
 
 def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
-               words: list | None = None) -> dict:
+               words: list | None = None, highlights: list | None = None) -> dict:
     if not (o.slow <= o.base <= o.fast):
         die("speeds must satisfy --slow <= --base <= --fast")
     dur = an["duration"]
@@ -370,6 +493,9 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
                 hi = mid
         return lo / (len(ranked) - 1)
 
+    # Once we can read what is said, sounding lively is no reason to slow down:
+    # only detected content and explicit marks get the slow speed.
+    content_led = highlights is not None
     spread = max(0.0, min(0.5, o.spread))
     core = spread / 2  # outermost share that gets the full fast / slow speed
 
@@ -379,7 +505,7 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
         if p < spread:
             k = 1.0 if p <= core else (spread - p) / (spread - core)
             return o.base + (o.fast - o.base) * k
-        if p > 1 - spread:
+        if p > 1 - spread and not content_led:
             q = 1 - p
             k = 1.0 if q <= core else (spread - q) / (spread - core)
             return o.base + (o.slow - o.base) * k
@@ -459,9 +585,11 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
     if out:
         out[-1]["end"] = round(dur, 3)
 
-    # ---- explicit marks win over everything ---------------------------------
+    # ---- what is being said beats how it sounds; explicit marks beat both ------
     label_speed = {"key": o.slow, "slow": o.slow, "normal": o.base, "base": o.base,
                    "filler": o.fast, "fast": o.fast, "skip": o.silence}
+    overlays = [(h["start"], h["end"], o.fast if h["kind"] == "filler" else o.slow,
+                 "content:" + h["kind"]) for h in (highlights or [])]
     for m in sorted(marks or [], key=lambda x: x["start"]):
         if m["speed"] is not None:
             v = float(m["speed"])
@@ -469,7 +597,9 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
             v = label_speed[m["label"]]
         else:
             die(f"mark needs a speed or a label in {sorted(label_speed)}: {m}")
-        a, b = max(0.0, m["start"]), min(dur, m["end"])
+        overlays.append((m["start"], m["end"], v, "mark:" + str(m["label"] or "speed")))
+    for a, b, v, why in overlays:
+        a, b = max(0.0, a), min(dur, b)
         if b <= a:
             continue
         cut = []
@@ -481,16 +611,18 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
                 cut.append({**s, "end": round(a, 3)})
             if s["end"] > b:
                 cut.append({**s, "start": round(b, 3)})
-        cut.append({"start": round(a, 3), "end": round(b, 3), "speed": round(v, 2),
-                    "reason": "mark:" + str(m["label"] or "speed")})
+        cut.append({"start": round(a, 3), "end": round(b, 3), "speed": round(v, 2), "reason": why})
         out = sorted(cut, key=lambda x: x["start"])
-    if marks:
-        # A mark can leave a sliver of the automatic map beside it; fold it into its neighbour.
-        auto = lambda s: s["reason"] != "pause" and not s["reason"].startswith("mark:")
+    if overlays:
+        # An overlay can leave a sliver of the automatic map beside it; fold it into its neighbour.
+        auto = lambda s: s["reason"] != "pause" and not s["reason"].startswith(("mark:", "content:"))
         for k, s in enumerate(out):
             if auto(s) and s["end"] - s["start"] < 1.0:
                 neigh = [out[j] for j in (k - 1, k + 1) if 0 <= j < len(out) and auto(out[j])
                          and out[j]["end"] - out[j]["start"] >= 1.0]
+                if not neigh and s["end"] - s["start"] < 0.5:
+                    neigh = [out[j] for j in (k + 1, k - 1) if 0 <= j < len(out)
+                             and out[j]["reason"].startswith(("mark:", "content:"))]
                 if neigh:
                     s["speed"], s["reason"] = neigh[0]["speed"], neigh[0]["reason"]
         tidy = []
@@ -504,7 +636,10 @@ def build_plan(an: dict, o: argparse.Namespace, marks: list | None = None,
     plan = {"rubato": 1, "source": an.get("source"), "duration": round(dur, 3), "fps": an.get("fps"),
             "settings": {"slow": o.slow, "base": o.base, "fast": o.fast, "silence": o.silence,
                          "spread": spread, "silence_db": None if thr is None else round(thr, 1)},
-            "notes": notes, "segments": out}
+            "notes": notes,
+            "highlights": [{"start": round(h["start"], 2), "end": round(h["end"], 2),
+                            "kind": h["kind"], "text": h["text"]} for h in (highlights or [])],
+            "segments": out}
     plan["stats"] = plan_stats(plan)
     return plan
 
@@ -576,9 +711,75 @@ def summary(plan: dict, width: int = 64) -> str:
                                 for k, v in st["source_seconds_by_speed"].items()),
         f"segments {st['segments']}",
     ]
+    hl = plan.get("highlights") or []
+    if hl:
+        kinds = {}
+        for h in hl:
+            kinds[h["kind"]] = kinds.get(h["kind"], 0) + 1
+        lines.append("content  " + ", ".join(f"{v} {k}" for k, v in sorted(kinds.items()))
+                     + "   (from the transcript; listed in the plan under \"highlights\")")
     for note in plan.get("notes", []):
         lines.append(f"note     {note}")
     return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------
+# transcribe
+# --------------------------------------------------------------------------
+
+def transcribe(ffmpeg: str, src: str, dst: str, model: str = "base",
+               language: str | None = None) -> bool:
+    """Write a Whisper-style JSON transcript. Returns False when no speech-to-text
+    engine is available (the caller then falls back to signals only)."""
+    try:
+        from faster_whisper import WhisperModel  # type: ignore
+    except Exception:
+        WhisperModel = None
+    cli = shutil.which("whisper")
+    if WhisperModel is None and not cli:
+        return False
+    with tempfile.TemporaryDirectory(prefix="rubato-") as tmp:
+        wav = os.path.join(tmp, "speech.wav")
+        run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", src, "-vn",
+             "-map", "0:a:0", "-ac", "1", "-ar", "16000", wav], "extracting audio")
+        print(f"rubato: transcribing (model {model})…", file=sys.stderr)
+        if WhisperModel is not None:
+            import numpy as np  # ships with faster-whisper
+            with wave.open(wav, "rb") as w:
+                pcm = w.readframes(w.getnframes())
+            # Hand over samples, not a path: avoids the engine's own decoder and its version quirks.
+            audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
+            wm = WhisperModel(model, compute_type="int8")
+            segs, info = wm.transcribe(audio, language=language, vad_filter=True,
+                                       word_timestamps=True)
+            data = {"language": info.language,
+                    "segments": [{"start": round(x.start, 2), "end": round(x.end, 2),
+                                  "text": x.text.strip(),
+                                  "words": [{"start": round(w.start, 2), "end": round(w.end, 2),
+                                             "word": w.word.strip()} for w in (x.words or [])]}
+                                 for x in segs]}
+        else:
+            cmd = [cli, wav, "--model", model, "--output_format", "json", "--output_dir", tmp,
+                   "--word_timestamps", "True"]
+            if language:
+                cmd += ["--language", language]
+            run(cmd, "transcribing")
+            raw = load_json(os.path.join(tmp, "speech.json"))
+            data = {"language": raw.get("language"),
+                    "segments": [{"start": round(x["start"], 2), "end": round(x["end"], 2),
+                                  "text": x["text"].strip(), "words": x.get("words", [])}
+                                 for x in raw.get("segments", [])]}
+    save_json(data, dst)
+    print(f"rubato: wrote {dst}", file=sys.stderr)
+    return True
+
+
+def sidecar_transcript(path: str) -> str | None:
+    stem = os.path.splitext(path)[0]
+    for ext in (".srt", ".vtt", ".transcript.json"):
+        if os.path.exists(stem + ext):
+            return stem + ext
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -786,7 +987,15 @@ def add_plan_opts(p: argparse.ArgumentParser) -> None:
     g.add_argument("--busy-motion", type=float, default=0.03,
                    help="scene-change score above which a quiet stretch counts as on-screen action")
     g.add_argument("--marks", help="JSON list of {start, end, label|speed} overrides")
-    g.add_argument("--transcript", help="SRT / VTT / Whisper JSON, used as a speech-density signal")
+    g.add_argument("--transcript",
+                   help="SRT / VTT / Whisper JSON. Read for takeaways, lists, numbers and filler, "
+                        "and used as a speech-density signal")
+    g.add_argument("--no-content", action="store_true",
+                   help="do not read the transcript for takeaways and filler (density signal only)")
+    g.add_argument("--cues", help='JSON {"key": [regex...], "filler": [regex...]} adding your own '
+                                  "phrases (other languages, house jargon)")
+    g.add_argument("--max-key-share", type=float, default=0.5,
+                   help="most of the runtime that detected highlights may slow down (default 0.5)")
 
 
 def add_render_opts(p: argparse.ArgumentParser) -> None:
@@ -810,8 +1019,17 @@ def save_json(obj: dict, path: str) -> None:
 
 def plan_from_args(an: dict, a: argparse.Namespace) -> dict:
     marks = load_marks(a.marks) if a.marks else None
-    words = word_times(parse_cues(a.transcript)) if a.transcript else None
-    return build_plan(an, a, marks, words)
+    words = highlights = None
+    if a.transcript:
+        cues = parse_cues(a.transcript)
+        words = word_times(cues)
+        if not a.no_content:
+            extra = load_json(a.cues) if a.cues else None
+            highlights = find_highlights(sentences(cues), an["duration"], extra, a.max_key_share)
+    plan = build_plan(an, a, marks, words, highlights)
+    if not a.transcript:
+        plan["notes"].append("no transcript: speeds follow sound and picture only, not what is said")
+    return plan
 
 
 def main() -> None:
@@ -825,6 +1043,10 @@ def main() -> None:
     p.add_argument("-o", "--output")
     p.add_argument("--plan-only", action="store_true", help="stop after writing the plan")
     p.add_argument("--no-video-analysis", action="store_true")
+    p.add_argument("--no-transcribe", action="store_true",
+                   help="do not run speech-to-text when no transcript is found next to the input")
+    p.add_argument("--model", default="base", help="Whisper model size (default base)")
+    p.add_argument("--language", help="spoken language code, e.g. en, it (default: detect)")
     add_plan_opts(p)
     add_render_opts(p)
 
@@ -832,6 +1054,12 @@ def main() -> None:
     p.add_argument("input")
     p.add_argument("-o", "--output", required=True)
     p.add_argument("--no-video-analysis", action="store_true")
+
+    p = sub.add_parser("transcribe", help="speech to text (needs faster-whisper or the whisper CLI)")
+    p.add_argument("input")
+    p.add_argument("-o", "--output", required=True)
+    p.add_argument("--model", default="base", help="Whisper model size (default base)")
+    p.add_argument("--language", help="spoken language code, e.g. en, it (default: detect)")
 
     p = sub.add_parser("plan", help="turn an analysis into a speed map")
     p.add_argument("analysis")
@@ -857,6 +1085,10 @@ def main() -> None:
     if a.cmd == "analyze":
         save_json(analyze(find_ffmpeg(a.ffmpeg), a.input, not a.no_video_analysis), a.output)
         print(f"rubato: wrote {a.output}", file=sys.stderr)
+    elif a.cmd == "transcribe":
+        if not transcribe(find_ffmpeg(a.ffmpeg), a.input, a.output, a.model, a.language):
+            die("no speech-to-text engine found. Run with `uv run --with faster-whisper "
+                "--with imageio-ffmpeg rubato.py transcribe ...`, or install the whisper CLI.")
     elif a.cmd == "plan":
         plan = plan_from_args(load_json(a.analysis), a)
         save_json(plan, a.output)
@@ -871,7 +1103,16 @@ def main() -> None:
         ff = find_ffmpeg(a.ffmpeg)
         stem, ext = os.path.splitext(a.input)
         out = a.output or f"{stem}.rubato{ext or '.mp4'}"
-        plan = plan_from_args(analyze(ff, a.input, not a.no_video_analysis), a)
+        an = analyze(ff, a.input, not a.no_video_analysis)
+        if not a.transcript:
+            a.transcript = sidecar_transcript(a.input)
+            if a.transcript:
+                print(f"rubato: using transcript {a.transcript}", file=sys.stderr)
+            elif an["has_audio"] and not a.no_transcribe:
+                made = os.path.splitext(a.input)[0] + ".transcript.json"
+                if transcribe(ff, a.input, made, a.model, a.language):
+                    a.transcript = made
+        plan = plan_from_args(an, a)
         plan_path = os.path.splitext(out)[0] + ".plan.json"
         save_json(plan, plan_path)
         print(summary(plan))
