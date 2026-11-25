@@ -146,7 +146,7 @@ Your own overrides go in a marks file, passed with `--marks marks.json`:
 ]
 ```
 
-Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--min-segment 2` (shortest stretch at its own speed), `--language it`, `--model small`, `--cues cues.json` (your own trigger phrases, or another language), `--plan-only`. The steps also exist separately as `transcribe`, `analyze`, `plan` and `render`. `plan.json` is a plain list of `{start, end, speed}` segments and can be edited by hand. `remap-srt` retimes subtitles to match. Audio files work too.
+Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--flat 1.25` (one speed throughout), `--max 1.3` (a ceiling), `--crf 18 --preset medium` (video quality), `--min-segment 2` (shortest stretch at its own speed), `--language it`, `--model small`, `--cues cues.json` (your own trigger phrases, or another language), `--plan-only`. The steps also exist separately as `transcribe`, `analyze`, `plan` and `render`. `plan.json` is a plain list of `{start, end, speed}` segments and can be edited by hand. `remap-srt` retimes subtitles to match. Audio files work too.
 
 ## FAQ
 
@@ -169,6 +169,18 @@ It reads the transcript. Sentences that announce a takeaway, start or continue a
 ### Does it work in languages other than English?
 
 Transcription works in any language Whisper supports. The built-in trigger phrases are English, so for other languages add your own with `--cues`, or use it as a skill and let the agent mark the transcript.
+
+### What about music videos, or videos with background music?
+
+Varying the speed of music makes the tempo lurch, so when the sound never goes quiet and no key passages are found, Rubato falls back to one flat speed and says so. Choose that speed with `--flat 1.25`. For speech over background music, the transcript still drives the picks; add `--silence-db` or marks if pauses are not detected.
+
+### How big is the download, and where does it go?
+
+The first transcription downloads the speech-to-text model: about 150 MB for the default `base` model, cached in `~/.cache/huggingface` and reused afterwards. `--model small` is more accurate and about 480 MB. If a download breaks, Rubato retries once and then falls back to `base`.
+
+### What happens to a video I send to the web demo or the hosted connector?
+
+It is processed on the server, the source file is deleted when processing ends, and the result is deleted after 30 minutes. The connector needs a direct link to the media file, not a page that plays it. Details are in the [privacy policy](https://www.tryrubato.com/privacy). For confidential recordings, run Rubato locally.
 
 ### Does the audio sound like a chipmunk?
 

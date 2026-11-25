@@ -32,7 +32,7 @@ uv run --with faster-whisper --with imageio-ffmpeg scripts/rubato.py auto input.
 
 With ffmpeg already installed, `python3 scripts/rubato.py auto input.mp4 --plan-only` works too. Either way `auto` looks for a transcript in this order: `--transcript FILE`, then `input.srt` / `input.vtt` / `input.transcript.json` next to the video, then it transcribes by itself if faster-whisper or the `whisper` CLI is present and saves `input.transcript.json`. Pass `--language it` (or any code) if detection gets the language wrong, and `--model small` for better accuracy on hard audio.
 
-`--plan-only` stops before rendering. It writes `input.rubato.plan.json` and prints:
+`--plan-only` stops before rendering. It writes `input.rubato.plan.json` and prints the speed map followed by the passages it picked, each with its timestamp, speed and text:
 
 ```
 source   0:54  ->  output 0:44   (effective 1.217x; flat 1.2x would give 0:45)
@@ -94,6 +94,8 @@ python3 scripts/rubato.py remap-srt plan.json input.srt -o output.srt
 | Key parts at baseline, never slower | `--slow` equal to `--base` |
 | Pauses treated like any dull part, not 2x | `--silence` equal to `--fast` |
 | Fewer, longer speed changes | `--min-segment 4` |
+| Just faster, one speed throughout (or it is music) | `--flat 1.25` |
+| Never above a ceiling, e.g. a short talking-head clip | `--max 1.3` |
 | Their own trigger phrases, or another language | `--cues cues.json` with `{"key": ["regex"], "filler": ["regex"]}` |
 | Only their marks, no phrase matching | `--no-content` |
 | Pauses not detected, or noise counted as speech | `--silence-db -35` (dBFS; default is adaptive) |
@@ -103,7 +105,9 @@ Defaults are `--slow 1.0 --base 1.2 --fast 1.5 --silence 2.0`. Speech stays comf
 ## Things to know
 
 - **Languages.** The built-in phrases are English. For any other language the transcript still works, so rely on your marks, and add recurring phrases with `--cues`.
-- **Music and constant background noise** hide pauses. The plan prints a note; rely on the transcript and marks, or pass `--silence-db`.
+- **Music and constant background sound.** When the sound never goes quiet and nothing is recognised as key, Rubato uses one flat speed and says so, because varying the speed of music makes the tempo lurch. For speech over a steady bed, add marks or pass `--silence-db` to vary it anyway.
+- **Thin transcripts.** If speech-to-text returns very few words or one long segment, the summary carries a note. Treat the picks as unreliable, say so to the user, and prefer marks you write yourself or a flat speed.
+- **Model downloads.** The first transcription downloads the speech model (base is about 150 MB, cached under `~/.cache/huggingface`). A failed load is retried once and then falls back to `base`.
 - **Screen recordings and demos.** A quiet stretch with a lot happening on screen counts as action (fast speed), not dead air. A silent demo has no transcript to read, so mark its payoff moments yourself.
 - **Audio-only input** works. Give an audio output name (`.m4a`, `.mp3`, `.wav`).
 - **Output** is H.264 8-bit with stereo AAC at the source frame rate. HDR, surround, extra audio tracks and embedded subtitle streams are not carried over.

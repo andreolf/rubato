@@ -26,6 +26,8 @@
   {"@type":"Question","name":"Is Rubato different from silence removal or jump cuts?","acceptedAnswer":{"@type":"Answer","text":"Yes. Silence removers cut content out, which causes visible jumps. Rubato never removes anything; it only changes speed, so the video stays continuous and subtitles can be retimed exactly."}},
   {"@type":"Question","name":"Does speeding up change the pitch of voices?","acceptedAnswer":{"@type":"Answer","text":"No. Rubato time-stretches the audio, so voices keep their natural pitch at every speed."}},
   {"@type":"Question","name":"Can I use Rubato with Claude or other AI agents?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rubato is a connector, an agent skill and an MCP server. Connector: add {{SITE_URL}}/mcp as a custom connector in Claude. Skill: npx skills add andreolf/rubato. Local MCP server: claude mcp add rubato -- uvx --from git+https://github.com/andreolf/rubato rubato-mcp. The agent then reads the transcript and marks the important passages itself."}},
+  {"@type":"Question","name":"Does Rubato work on music videos or videos with background music?","acceptedAnswer":{"@type":"Answer","text":"Varying the speed of music makes the tempo lurch, so when the sound never goes quiet and no key passages are found, Rubato uses one flat speed and says so. Speech over background music still works, because the transcript drives the picks. On the command line, --flat 1.25 sets one speed for the whole file."}},
+  {"@type":"Question","name":"What happens to a video sent to the Rubato connector or web app?","acceptedAnswer":{"@type":"Answer","text":"It is processed on the server, the source file is deleted when processing ends, and the result is deleted after 30 minutes. The connector needs a direct link to the media file, not a page that plays it."}},
   {"@type":"Question","name":"Is Rubato free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rubato is free and open source under the MIT license. The online demo takes recordings up to {{MAX_MINUTES}} minutes; the skill and command-line tool have no limit."}}
  ]}
 ]}
@@ -268,7 +270,7 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
     <div>
       <div class="n">Connector · no install</div>
       <h3>Add Rubato to Claude as a connector</h3>
-      <p>In Claude, open <b>Settings → Connectors → Add custom connector</b> and paste this address. Then give Claude a link to a video and ask it to speed it up with Rubato. Works for recordings up to {{MAX_MINUTES}} minutes.</p>
+      <p>In Claude, open <b>Settings → Connectors → Add custom connector</b> and paste this address. Then give Claude a link to a video and ask it to speed it up with Rubato. Works for recordings up to {{MAX_MINUTES}} minutes. <a href="/connector" style="color:#ff9a78">Setup and usage guide</a></p>
     </div>
     <pre>{{SITE_URL}}/mcp</pre>
   </div>
@@ -340,6 +342,9 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
   <details><summary>How is this different from watching at 1.5x?</summary><p>A flat 1.5x rushes the parts you need to follow and still wastes time on the parts you do not. Dynamic speed gives each passage its own speed based on what is being said.</p></details>
   <details><summary>Is this the same as silence removal or jump cuts?</summary><p>No. Silence removers cut content out, which causes visible jumps. Rubato never removes anything; it only changes speed, so the video stays continuous and subtitles can be retimed exactly.</p></details>
   <details><summary>Will voices sound high-pitched?</summary><p>No. The audio is time-stretched, so voices keep their natural pitch at every speed.</p></details>
+  <details><summary>What about music, or videos with background music?</summary><p>Changing the speed of music every few seconds makes the tempo lurch. When the sound never goes quiet and no key passages are found, Rubato uses one flat speed and tells you. Speech over background music still works, since the transcript drives the picks.</p></details>
+  <details><summary>What happens to a video sent through the Claude connector?</summary><p>The same as an upload: it is processed on the server, the source file is deleted when processing ends, and the result is deleted after 30 minutes. The connector needs a direct link to the media file, not a page that plays it. See the <a href="/privacy">privacy policy</a>.</p></details>
+  <details><summary>How big is the download if I run it myself?</summary><p>The command-line tool, skill and local MCP server download a speech-to-text model on first use: about 150 MB for the default model, cached and reused afterwards. Nothing is downloaded to use this page or the hosted connector.</p></details>
   <details><summary>What kind of video does it work on?</summary><p>Anything where someone is talking: lectures, talks, meetings, interviews, podcasts, tutorials and narrated screen recordings. It is not meant for music videos, and raw footage with repeated takes needs editing first.</p></details>
   <details><summary>Which formats and sizes can I upload?</summary><p>MP4, MOV, WebM, MKV, MP3, M4A, WAV and most other formats ffmpeg reads, up to {{MAX_MINUTES}} minutes and {{MAX_MB}} MB in this demo. The result is an MP4 (H.264 with AAC audio), or M4A for audio. The skill and command-line tool have no limit.</p></details>
   <details><summary>Does it work in languages other than English?</summary><p>Transcription works in most languages. The phrases this demo looks for are English, so for other languages use the skill, where the agent reads the transcript itself, or add your own phrases on the command line.</p></details>
@@ -472,7 +477,7 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
 
     var note=$('r-note'),msg='';
     if(!r.transcribed)msg='No speech could be transcribed, so only pauses and on-screen activity changed the speed.';
-    else if(r.music&&!r.highlights.length)msg='This sounds like music or has constant background sound, and no takeaways or lists were found. Rubato is built for speech: talks, lectures, meetings, tutorials.';
+    else if(r.music&&!r.highlights.length)msg='This sounds like music or has constant background sound, and no takeaways or lists were found, so one flat speed was used. Rubato is built for speech: talks, lectures, meetings, tutorials.';
     else if(!r.highlights.length)msg='No sentence announced itself as a takeaway or a list, so only pauses and flat stretches changed speed. Used as a skill, the agent reads the transcript and picks the important passages itself.';
     note.hidden=!msg;note.textContent=msg;
     var dl=$('r-dl');dl.href=r.file+'?download=1';dl.textContent='Download '+(r.kind==='video'?'video':'audio');
