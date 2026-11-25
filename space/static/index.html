@@ -140,7 +140,13 @@ pre{margin:10px 0 0;background:var(--ink);color:#f3efe8;border-radius:12px;paddi
 .faq summary:after{content:"+";color:var(--muted);font-weight:400}
 .faq details[open] summary:after{content:"–"}
 .faq p{color:var(--muted);margin:10px 0 0;max-width:720px}
-footer{margin-top:72px;border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between}
+footer{margin-top:72px;border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:14px}
+footer .fb{display:flex;flex-wrap:wrap;gap:16px 28px;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+footer .fb strong{color:var(--ink);font-size:17px}
+footer .fb p{margin:4px 0 0;font-size:15px;max-width:440px}
+footer .fb nav{display:flex;flex-wrap:wrap;gap:10px}
+footer .fb .btn{padding:10px 16px;font-size:14.5px;background:var(--card)}
+footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;margin-top:22px}
 [hidden]{display:none!important}
 @media (max-width:760px){.cards,.two{grid-template-columns:1fr}.grid4{grid-template-columns:1fr 1fr}.numbers{grid-template-columns:1fr 1fr}.numbers .num:first-child{grid-column:1/-1}
  ul.picks li{grid-template-columns:48px 1fr 40px}ul.picks .tag{grid-column:2}ul.picks .tx{grid-column:1/-1}.nav a.link{display:none}}
@@ -158,6 +164,7 @@ footer{margin-top:72px;border-top:1px solid var(--line);padding:26px 0 40px;colo
     <a class="link" href="#how">How it works</a>
     <a class="link" href="#agents">For Claude &amp; agents</a>
     <a class="link" href="#faq">FAQ</a>
+    <a class="link" href="{{REPO}}/issues/new?template=feedback.yml" target="_blank" rel="noopener">Feedback</a>
     <a class="star" href="{{REPO}}" target="_blank" rel="noopener">★ Star on GitHub</a>
   </nav>
 </header>
@@ -227,7 +234,7 @@ footer{margin-top:72px;border-top:1px solid var(--line);padding:26px 0 40px;colo
       <a class="btn accent" id="r-dl" href="#">Download</a>
       <button class="btn ghost" id="again" type="button">Try another file</button>
     </div>
-    <div class="cta">Longer recordings, any language, and an agent that reads the transcript for you: <a href="{{REPO}}" target="_blank" rel="noopener"><b>get Rubato on GitHub</b></a> or run <span class="code">npx skills add andreolf/rubato</span></div>
+    <div class="cta">Longer recordings, any language, and an agent that reads the transcript for you: <a href="{{REPO}}" target="_blank" rel="noopener"><b>get Rubato on GitHub</b></a> or run <span class="code">npx skills add andreolf/rubato</span><br>Picked the wrong parts? <a href="{{REPO}}/issues/new?template=feedback.yml" target="_blank" rel="noopener"><b>Tell us what it got wrong</b></a>.</div>
   </div>
 </div>
 
@@ -279,8 +286,21 @@ footer{margin-top:72px;border-top:1px solid var(--line);padding:26px 0 40px;colo
 </main>
 
 <footer>
-  <span>Rubato · MIT license · <a href="{{REPO}}" target="_blank" rel="noopener">GitHub</a></span>
-  <span>Rubato: the musician's habit of stretching and squeezing tempo to follow the phrase.</span>
+  <div class="fb">
+    <div>
+      <strong>Help make Rubato better</strong>
+      <p>Did it slow down for the wrong part, or miss the right one? Is something missing? Tell us.</p>
+    </div>
+    <nav aria-label="Feedback">
+      <a class="btn ghost" href="{{REPO}}/issues/new?template=feedback.yml" target="_blank" rel="noopener">Give feedback</a>
+      <a class="btn ghost" href="{{REPO}}/issues/new?template=feature_request.yml" target="_blank" rel="noopener">Request a feature</a>
+      <a class="btn ghost" href="{{REPO}}/issues/new?template=problem.yml" target="_blank" rel="noopener">Report a problem</a>
+    </nav>
+  </div>
+  <div class="fine">
+    <span>Rubato · MIT license · <a href="{{REPO}}" target="_blank" rel="noopener">GitHub</a></span>
+    <span>Rubato: the musician's habit of stretching and squeezing tempo to follow the phrase.</span>
+  </div>
 </footer>
 </div>
 

@@ -1,0 +1,23 @@
+name: Report a problem
+description: Something failed or the result is broken
+title: "Problem: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Web demo (tryrubato.com)
+        - Claude skill
+        - MCP server
+        - Command line
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Include any error message, and the length and format of the file.
+    validations:
+      required: true
