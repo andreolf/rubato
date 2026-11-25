@@ -323,15 +323,19 @@ KEY_CUES = [
     ("takeaway", 2, r"\bthe (one |single )?(main|key|important|big|biggest|whole|real|core|critical|crucial|only) "
                     r"(point|thing|idea|lesson|insight|message|question|problem|difference|reason|trick)\b"),
     ("takeaway", 2, r"\b(most|really|very|super|extremely|incredibly) important\b"),
-    ("takeaway", 2, r"\b(remember|keep in mind|don'?t forget|never forget|pay attention|write (this|that) down)\b"),
+    ("takeaway", 2, r"\b(keep in mind|don'?t forget|never forget|pay attention|write (this|that) down)\b"),
+    ("takeaway", 2, r"(^|[.!?] )remember\b|\bremember[,:]"),
+    ("takeaway", 1, r"\bremember\b"),
     ("takeaway", 2, r"\b(here'?s|this is|that'?s) (the thing|the deal|what matters|the trick|the secret|the point|the catch)\b"),
     ("takeaway", 2, r"\bwhat (this|that|it) (really |actually )?means\b"),
     ("takeaway", 2, r"\b(let me|i'?ll|i will|i want to) (repeat|say (that|it|this) again|be (very )?clear|stress|emphasi[sz]e)\b"),
     ("takeaway", 1, r"\b(in other words|the point is|the trick is|the secret is|the answer is|the reason is|make sure|note that)\b"),
     ("takeaway", 1, r"\b(crucial|critical|essential|fundamental|important(ly)?|key)\b"),
     ("list", 2, r"\b" + NUM + r" (?:\w+ ){0,2}" + THING + r"\b"),
-    ("list", 2, r"\b(number|step|rule|tip|point|reason|lesson|option|part|mistake) "
-                r"(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b"),
+    # "number three", but not a slate such as "script number five" or "cam number eight"
+    ("list", 2, r"(?<!script )(?<!cam )(?<!camera )(?<!take )(?<!scene )(?<!screen )(?<!slide )(?<!episode )"
+                r"\b(number|step|rule|tip|point|reason|lesson|option|part|mistake) "
+                r"(one|two|three|four|five|six|seven|eight|nine|ten|10|[1-9])\b(?! ?\d)"),
     ("list", 2, r"\b(firstly|secondly|thirdly|lastly)\b"),
     ("list", 2, r"\b(the )?" + ORD + r" (one|thing|point|reason|step|rule|tip|lesson|mistake|is|was)\b"),
     ("list", 1, r"\b(first|second|third|fourth|fifth|finally|next|then|last)[,:]"),
@@ -349,7 +353,7 @@ FILLER_CUES = [
     r"\b(like and subscribe|hit (the|that) (bell|like)|sponsor(ed)? (of|by)|use (the )?code)\b",
     r"\b(before we (start|begin|get started)|housekeeping|welcome (back|everyone|everybody)|thanks for (joining|watching|coming|tuning in))\b",
 ]
-HESITATION = re.compile(r"\b(um+|uh+|erm+|hmm+|you know|i mean|sort of|kind of|so yeah|okay so)\b")
+HESITATION = re.compile(r"\b(um+|uh+|erm+|hmm+|(?<!do )(?<!did )(?<!if )you know|i mean|sort of|kind of|so yeah|okay so)\b")
 
 
 def find_highlights(cues: list, duration: float, extra: dict | None = None,
