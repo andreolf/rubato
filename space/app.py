@@ -74,8 +74,27 @@ try:
         from mcp.server.fastmcp import FastMCP as _MCP
     from mcp.server.transport_security import TransportSecuritySettings
     from mcp.types import ToolAnnotations
+    _extras = {}
+    try:  # server title, description and logo, for clients that show them
+        from mcp.types import Icon
+        _home = SITE_URL or "https://www.tryrubato.com"
+        try:
+            _icons = [Icon(src=_home + "/icon.png", mimeType="image/png", sizes=["512x512"]),
+                      Icon(src=_home + "/icon.svg", mimeType="image/svg+xml", sizes=["any"])]
+        except Exception:
+            _icons = [Icon(src=_home + "/icon.png", mime_type="image/png", sizes=["512x512"])]
+        _extras = {"title": "Rubato", "website_url": _home, "icons": _icons, "version": "0.4.0",
+                   "description": "Speed up videos dynamically: slow for the takeaways, fast "
+                                  "through filler and silence. Nothing is cut."}
+    except Exception:
+        _extras = {}
+    try:
+        _MCP("probe", **_extras)
+    except TypeError:  # older SDK without these fields
+        _extras = {}
     mcp_server = _MCP(
         "rubato",
+        **_extras,
         instructions=(
             "Rubato speeds up a video or audio recording dynamically: slow for takeaways, lists "
             "and key numbers, fast through filler, fastest through dead air. Nothing is cut and "
@@ -394,6 +413,21 @@ async def sitemap():
 
 @app.get("/icon.png")
 async def icon():
+    return FileResponse(os.path.join(STATIC, "icon.png"), media_type="image/png")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(STATIC, "favicon.ico"), media_type="image/x-icon")
+
+
+@app.get("/icon.svg")
+async def icon_svg():
+    return FileResponse(os.path.join(STATIC, "icon.svg"), media_type="image/svg+xml")
+
+
+@app.get("/apple-touch-icon.png")
+async def apple_icon():
     return FileResponse(os.path.join(STATIC, "icon.png"), media_type="image/png")
 
 

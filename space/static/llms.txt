@@ -13,7 +13,8 @@ It is for recordings where someone talks: lectures, talks, meetings, interviews,
 Pick the first route available to you.
 
 0. Hosted connector (remote MCP, streamable HTTP, no sign-in): {{SITE_URL}}/mcp
-   - In Claude: Settings, Connectors, Add custom connector, paste that address.
+   - Listed in Claude's connector directory: https://claude.ai/directory/rubato
+   - In Claude: Settings, Connectors, search "Rubato" in the directory and connect. Or add the address above as a custom connector.
    - Tools: `speed_up_video` (takes a direct public link to the media file; returns a job_id) and `get_result` (poll until stage is done; returns lengths, picked passages and a download link).
    - Limits: {{MAX_MINUTES}} minutes, {{MAX_MB}} MB. For a local file with no link, use a route below or the upload box on the site.
 1. Agent skill. Install: `npx skills add andreolf/rubato`. Or read the skill instructions directly: {{REPO}}/blob/main/skills/rubato/SKILL.md

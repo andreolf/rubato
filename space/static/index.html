@@ -14,7 +14,10 @@
 <meta property="og:url" content="{{SITE_URL}}/">
 <meta property="og:image" content="{{SITE_URL}}/og.svg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23171512'/%3E%3Cpath d='M6 21h3v-6h3v6h3V9h3v12h3v-9h3v9' fill='none' stroke='%23ff6a3d' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
  {"@type":"SoftwareApplication","name":"Rubato","applicationCategory":"MultimediaApplication","operatingSystem":"Web, macOS, Linux, Windows",
@@ -25,7 +28,7 @@
   {"@type":"Question","name":"How is dynamic speed different from watching at 1.5x?","acceptedAnswer":{"@type":"Answer","text":"A flat 1.5x rushes the parts you need to follow and still wastes time on the parts you do not. Dynamic speed gives each passage its own speed based on what is being said."}},
   {"@type":"Question","name":"Is Rubato different from silence removal or jump cuts?","acceptedAnswer":{"@type":"Answer","text":"Yes. Silence removers cut content out, which causes visible jumps. Rubato never removes anything; it only changes speed, so the video stays continuous and subtitles can be retimed exactly."}},
   {"@type":"Question","name":"Does speeding up change the pitch of voices?","acceptedAnswer":{"@type":"Answer","text":"No. Rubato time-stretches the audio, so voices keep their natural pitch at every speed."}},
-  {"@type":"Question","name":"Can I use Rubato with Claude or other AI agents?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rubato is a connector, an agent skill and an MCP server. Connector: add {{SITE_URL}}/mcp as a custom connector in Claude. Skill: npx skills add andreolf/rubato. Local MCP server: claude mcp add rubato -- uvx --from git+https://github.com/andreolf/rubato rubato-mcp. The agent then reads the transcript and marks the important passages itself."}},
+  {"@type":"Question","name":"Can I use Rubato with Claude or other AI agents?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rubato is a connector, an agent skill and an MCP server. Connector: Rubato is listed in Claude's connector directory at https://claude.ai/directory/rubato (server address {{SITE_URL}}/mcp). Skill: npx skills add andreolf/rubato. Local MCP server: claude mcp add rubato -- uvx --from git+https://github.com/andreolf/rubato rubato-mcp. The agent then reads the transcript and marks the important passages itself."}},
   {"@type":"Question","name":"Does Rubato work on music videos or videos with background music?","acceptedAnswer":{"@type":"Answer","text":"Varying the speed of music makes the tempo lurch, so when the sound never goes quiet and no key passages are found, Rubato uses one flat speed and says so. Speech over background music still works, because the transcript drives the picks. On the command line, --flat 1.25 sets one speed for the whole file."}},
   {"@type":"Question","name":"What happens to a video sent to the Rubato connector or web app?","acceptedAnswer":{"@type":"Answer","text":"It is processed on the server, the source file is deleted when processing ends, and the result is deleted after 30 minutes. The connector needs a direct link to the media file, not a page that plays it."}},
   {"@type":"Question","name":"Is Rubato free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rubato is free and open source under the MIT license. The online demo takes recordings up to {{MAX_MINUTES}} minutes; the skill and command-line tool have no limit."}}
@@ -139,7 +142,10 @@ table.speedtable{width:100%;border-collapse:collapse;background:var(--card);bord
 .connector .n{font-size:13px;font-weight:700;color:#ff9a78}
 .connector h3{margin:6px 0;font-size:20px;color:#fff}
 .connector p{margin:0;color:#cfc8bb;font-size:15px}.connector p b{color:#fff}
-.connector pre{margin:0;background:#2a2622;border:1px solid #3a352f;font-size:15px;text-align:center;user-select:all}
+.connector .cbox{display:grid;gap:10px;justify-items:stretch;text-align:center}
+.connector .cbox span{font-size:13px;color:#a8a196}
+.connector .cbox .btn{justify-content:center}
+.connector pre{margin:0;background:#2a2622;border:1px solid #3a352f;font-size:13.5px;text-align:center;user-select:all}
 @media (max-width:760px){.connector{grid-template-columns:1fr}}
 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .three .card{min-width:0}.three pre{font-size:12.5px}
@@ -268,11 +274,15 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
   <p class="lead">Rubato ships as a <b>connector</b>, an <b>agent skill</b> and an <b>MCP server</b>, all free. The agent reads the transcript, marks the takeaways nobody announced, and renders the video on your machine with no length limit.</p>
   <div class="connector">
     <div>
-      <div class="n">Connector · no install</div>
-      <h3>Add Rubato to Claude as a connector</h3>
-      <p>In Claude, open <b>Settings → Connectors → Add custom connector</b> and paste this address. Then give Claude a link to a video and ask it to speed it up with Rubato. Works for recordings up to {{MAX_MINUTES}} minutes. <a href="/connector" style="color:#ff9a78">Setup and usage guide</a></p>
+      <div class="n">Connector · in Claude's directory · no install</div>
+      <h3>Rubato is in Claude's connector directory</h3>
+      <p>Open the listing and connect it, or search “Rubato” under <b>Settings → Connectors</b>. Then give Claude a link to a video and ask it to speed it up with Rubato. Works for recordings up to {{MAX_MINUTES}} minutes. <a href="/connector" style="color:#ff9a78">Setup and usage guide</a></p>
     </div>
-    <pre>{{SITE_URL}}/mcp</pre>
+    <div class="cbox">
+      <a class="btn accent" href="https://claude.ai/directory/rubato" target="_blank" rel="noopener">Open in Claude's directory</a>
+      <span>Other MCP clients, use this address:</span>
+      <pre>{{SITE_URL}}/mcp</pre>
+    </div>
   </div>
   <div class="three">
     <div class="card"><div class="n">Agent skill</div><h3>Install the skill</h3><p>Claude Code, Claude apps, Codex, Cursor, anything that reads <span class="code">SKILL.md</span>.</p>
@@ -301,7 +311,7 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
     <h3>For AI agents reading this page</h3>
     <p>Rubato has a hosted MCP endpoint and three local install routes. To use it on a user's video, pick the first that fits:</p>
     <ol>
-      <li><b>Hosted connector (remote MCP, no install):</b> <span class="code">{{SITE_URL}}/mcp</span> (streamable HTTP, no sign-in). Call <span class="code">speed_up_video</span> with a direct link to the file, then <span class="code">get_result</span> until done. For local files with no link, use the routes below or send the user to this page's upload box.</li>
+      <li><b>Hosted connector (remote MCP, no install):</b> listed in Claude's connector directory at <a href="https://claude.ai/directory/rubato">claude.ai/directory/rubato</a>; server address <span class="code">{{SITE_URL}}/mcp</span> (streamable HTTP, no sign-in). Call <span class="code">speed_up_video</span> with a direct link to the file, then <span class="code">get_result</span> until done. For local files with no link, use the routes below or send the user to this page's upload box.</li>
       <li><b>Skill:</b> run <span class="code">npx skills add andreolf/rubato</span>, or read <a href="{{REPO}}/blob/main/skills/rubato/SKILL.md">SKILL.md</a> and follow it.</li>
       <li><b>MCP:</b> add the server with <span class="code">uvx --from git+https://github.com/andreolf/rubato rubato-mcp</span>, then call <span class="code">rubato_plan</span>, read <span class="code">rubato_transcript</span>, and call <span class="code">rubato_render</span>.</li>
       <li><b>CLI:</b> run <span class="code">uvx --from git+https://github.com/andreolf/rubato rubato auto FILE</span>.</li>

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/svg+xml" href="/icon.svg">
 <title>Rubato connector for Claude: setup and usage</title>
 <meta name="description" content="How to add the Rubato connector (remote MCP server) to Claude and use it to speed up videos dynamically.">
 <link rel="canonical" href="{{SITE_URL}}/connector">
@@ -15,13 +16,13 @@ table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #e7e2
 <p class="muted">Speed up a video dynamically from a conversation: slow for the takeaways, fast through the filler and silence. Nothing is cut and voices keep their pitch.</p>
 
 <h2>Set it up</h2>
+<p>Rubato is listed in Claude's connector directory.</p>
 <ol>
-<li>In Claude, open <b>Settings → Connectors</b>.</li>
-<li>Choose <b>Add custom connector</b> (or find Rubato in the directory).</li>
-<li>Paste the server address and confirm. There is no sign-in and no account.</li>
+<li>Open <a href="https://claude.ai/directory/rubato">claude.ai/directory/rubato</a>, or in Claude go to <b>Settings → Connectors</b>, browse the directory and search “Rubato”.</li>
+<li>Choose <b>Connect</b>. There is no sign-in and no account.</li>
 </ol>
+<p>In other MCP clients, or to add it by hand, use the server address below. It speaks MCP over streamable HTTP.</p>
 <pre>{{SITE_URL}}/mcp</pre>
-<p>The server speaks MCP over streamable HTTP.</p>
 
 <h2>What you need</h2>
 <ul>
