@@ -62,7 +62,17 @@ Or copy `skills/rubato` into `~/.claude/skills/`.
 
 Then ask for it in plain words: "speed this lecture up, but smartly", "tighten this screen recording, slow down for the important parts".
 
-## Use as an MCP server
+## Use as a connector in Claude (no install)
+
+Rubato has a hosted MCP endpoint. In Claude, open Settings → Connectors → Add custom connector and paste:
+
+```
+https://www.tryrubato.com/mcp
+```
+
+Then give Claude a direct link to a video and ask it to speed it up with Rubato. The connector has two tools, `speed_up_video` and `get_result`, and handles recordings up to 15 minutes. For local files, use the upload page, the skill or the local MCP server below.
+
+## Use as a local MCP server
 
 For Claude Desktop, Claude Code, Cursor and any other MCP client. Nothing to install first; [uv](https://docs.astral.sh/uv/) fetches it:
 
@@ -170,7 +180,7 @@ Yes: `--base`, `--fast`, `--slow` and `--silence`. You can also edit the generat
 
 ### Is there an MCP server for speeding up videos?
 
-Yes. Rubato ships one: `uvx --from git+https://github.com/andreolf/rubato rubato-mcp`. See "Use as an MCP server" above.
+Yes, two. A hosted one you can add as a connector (`https://www.tryrubato.com/mcp`) and a local one (`uvx --from git+https://github.com/andreolf/rubato rubato-mcp`). See the sections above.
 
 ### Does it work without Claude?
 

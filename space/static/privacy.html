@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy · Rubato</title>
+<meta name="description" content="How Rubato handles the video and audio files you send it.">
+<link rel="canonical" href="{{SITE_URL}}/privacy">
+<style>body{margin:0;background:#faf8f4;color:#171512;font:17px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:48px 24px 80px}h1{font-size:36px;letter-spacing:-.02em;margin:0 0 8px}h2{font-size:20px;margin:32px 0 6px}
+p,li{color:#4a463f}a{color:#c2380f}.muted{color:#6b665e;font-size:15px}</style></head>
+<body><main>
+<p><a href="/">← Rubato</a></p>
+<h1>Privacy policy</h1>
+<p class="muted">Applies to the Rubato website, its upload tool, its HTTP API and its hosted connector (MCP endpoint). Last updated 25 November 2026.</p>
+
+<h2>What Rubato receives</h2>
+<p>The video or audio file you upload, or the file behind a link you give to the connector, plus the speed settings you choose. Rubato has no accounts and does not ask for your name or email.</p>
+
+<h2>What happens to your file</h2>
+<ul>
+<li>The file is processed automatically on the server: it is analysed, transcribed by a speech-to-text model running on the same server, and re-rendered at dynamic speed.</li>
+<li>The original file is deleted as soon as processing ends.</li>
+<li>The result and its transcript are deleted 30 minutes after processing ends. Until then, anyone who has the result link can download it.</li>
+<li>Files and transcripts are not used to train models, not sold and not shared with third parties.</li>
+</ul>
+
+<h2>Hosting and logs</h2>
+<p>The service runs on Hugging Face Spaces. Like any web host, the hosting provider may keep technical logs such as IP addresses and request times. Rubato itself keeps no log of who uploaded what.</p>
+
+<h2>Cookies and tracking</h2>
+<p>Rubato sets no cookies and uses no analytics or advertising trackers.</p>
+
+<h2>Sensitive recordings</h2>
+<p>This is a public demo. Do not send confidential recordings to it. For those, run Rubato on your own machine with the open-source command-line tool, skill or local MCP server, where nothing leaves your computer.</p>
+
+<h2>Contact</h2>
+<p>Questions or requests: <a href="{{REPO}}/issues/new?template=feedback.yml">open an issue on GitHub</a>.</p>
+</main></body></html>

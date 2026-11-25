@@ -2,19 +2,34 @@
 
 > Rubato speeds up videos dynamically. It transcribes a recording, slows down for takeaways, lists and key numbers, and speeds through filler and silence. Pitch is preserved and nothing is cut. Free and open source (MIT).
 
-Rubato is a web demo, a command-line tool, an agent skill (Claude Code, Claude apps, Codex, Cursor) and an MCP server.
+Rubato exists in five forms: a hosted connector (remote MCP server), an agent skill, a local MCP server, a command-line tool, and this web app with an HTTP API. Source: https://github.com/andreolf/rubato
 
 Default speeds: takeaways, lists and key numbers 1.0x; ordinary passages 1.2x; filler and flat stretches 1.5x; dead air 2.0x. All are adjustable.
 
 It is for recordings where someone talks: lectures, talks, meetings, interviews, podcasts, tutorials, narrated screen recordings. It is not a silence remover or jump-cut tool: it never removes content.
 
-## Install
+## If you are an AI agent asked to use Rubato on a video
 
-- Agent skill: `npx skills add andreolf/rubato`, or ask the agent: "Install the rubato skill from https://github.com/andreolf/rubato"
-- Command line: `uv run --with faster-whisper --with imageio-ffmpeg rubato.py auto talk.mp4`
-- MCP server: see the README
+Pick the first route available to you.
+
+0. Hosted connector (remote MCP, streamable HTTP, no sign-in): {{SITE_URL}}/mcp
+   - In Claude: Settings, Connectors, Add custom connector, paste that address.
+   - Tools: `speed_up_video` (takes a direct public link to the media file; returns a job_id) and `get_result` (poll until stage is done; returns lengths, picked passages and a download link).
+   - Limits: {{MAX_MINUTES}} minutes, {{MAX_MB}} MB. For a local file with no link, use a route below or the upload box on the site.
+1. Agent skill. Install: `npx skills add andreolf/rubato`. Or read the skill instructions directly: {{REPO}}/blob/main/skills/rubato/SKILL.md
+2. MCP server. Command: `uvx --from git+https://github.com/andreolf/rubato rubato-mcp`
+   - Claude Code: `claude mcp add rubato -- uvx --from git+https://github.com/andreolf/rubato rubato-mcp`
+   - JSON config: {"mcpServers": {"rubato": {"command": "uvx", "args": ["--from", "git+https://github.com/andreolf/rubato", "rubato-mcp"]}}}
+   - Tools: `rubato_plan` (transcribe, pick passages, build the speed map; accepts marks), `rubato_transcript` (timestamped transcript), `rubato_render` (render from the plan).
+3. Command line. `uvx --from git+https://github.com/andreolf/rubato rubato auto FILE` writes FILE.rubato.mp4 next to the input. Add `--plan-only` to preview.
+4. HTTP API on this site, for files up to {{MAX_MINUTES}} minutes and {{MAX_MB}} MB, when you cannot run anything locally:
+   - `POST {{SITE_URL}}/api/jobs` as multipart form data with field `file`. Optional fields: `base`, `slow`, `fast`, `silence` (speeds), `language`. Returns `{"id": "..."}`.
+   - `GET {{SITE_URL}}/api/jobs/{id}` returns `stage` (queued, listening, transcribing, planning, rendering, done, error), and when done a `result` with lengths, the speed segments and the recognised passages.
+   - `GET {{SITE_URL}}/api/jobs/{id}/file?download=1` returns the rendered MP4 (or M4A for audio).
+   - Uploads are deleted after processing; results are kept for 30 minutes.
 
 ## Links
 
 - [Source code and documentation]({{REPO}})
 - [Skill instructions]({{REPO}}/blob/main/skills/rubato/SKILL.md)
+- [Web app]({{SITE_URL}}/)
