@@ -8,6 +8,8 @@ Good for lectures, talks, meeting recordings, screen recordings, tutorials, demo
 
 **Try it in your browser, no install:** https://www.tryrubato.com
 
+**Use it in Claude with no install:** connect [Rubato in Claude's connector directory](https://claude.ai/directory/rubato)
+
 **Install by asking your agent:**
 
 > Install the rubato skill from https://github.com/andreolf/rubato
@@ -64,7 +66,9 @@ Then ask for it in plain words: "speed this lecture up, but smartly", "tighten t
 
 ## Use as a connector in Claude (no install)
 
-Rubato has a hosted MCP endpoint. In Claude, open Settings → Connectors → Add custom connector and paste:
+Rubato is listed in Claude's connector directory: **https://claude.ai/directory/rubato**. Open the listing and connect it, or search "Rubato" under Settings → Connectors.
+
+In other MCP clients, add the hosted endpoint directly:
 
 ```
 https://www.tryrubato.com/mcp
