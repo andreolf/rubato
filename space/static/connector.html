@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rubato connector for Claude: setup and usage</title>
+<meta name="description" content="How to add the Rubato connector (remote MCP server) to Claude and use it to speed up videos dynamically.">
+<link rel="canonical" href="{{SITE_URL}}/connector">
+<style>body{margin:0;background:#faf8f4;color:#171512;font:17px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:48px 24px 80px}h1{font-size:36px;letter-spacing:-.02em;line-height:1.15;margin:0 0 8px}h2{font-size:22px;margin:36px 0 8px}h3{font-size:17px;margin:22px 0 4px}
+p,li{color:#4a463f}a{color:#c2380f}.muted{color:#6b665e}
+code{font:14px ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;border:1px solid #e7e2d9;border-radius:6px;padding:1px 6px;color:#171512}
+pre{background:#171512;color:#f3efe8;border-radius:12px;padding:14px 16px;overflow:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #e7e2d9;border-radius:12px;overflow:hidden}td,th{text-align:left;padding:10px 14px;border-top:1px solid #e7e2d9;font-size:15.5px;vertical-align:top}th{border-top:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b665e}</style></head>
+<body><main>
+<p><a href="/">← Rubato</a></p>
+<h1>Rubato connector for Claude</h1>
+<p class="muted">Speed up a video dynamically from a conversation: slow for the takeaways, fast through the filler and silence. Nothing is cut and voices keep their pitch.</p>
+
+<h2>Set it up</h2>
+<ol>
+<li>In Claude, open <b>Settings → Connectors</b>.</li>
+<li>Choose <b>Add custom connector</b> (or find Rubato in the directory).</li>
+<li>Paste the server address and confirm. There is no sign-in and no account.</li>
+</ol>
+<pre>{{SITE_URL}}/mcp</pre>
+<p>The server speaks MCP over streamable HTTP.</p>
+
+<h2>What you need</h2>
+<ul>
+<li>A <b>direct, public link</b> to a video or audio file (MP4, MOV, WebM, MKV, MP3, M4A, WAV). A link to a page that plays the video will not work.</li>
+<li>A recording of at most {{MAX_MINUTES}} minutes and {{MAX_MB}} MB, with speech in it.</li>
+</ul>
+<p>For a file on your computer, use the <a href="/">upload box</a>, or run Rubato locally with the <a href="{{REPO}}">skill, local MCP server or command-line tool</a>, which have no length limit.</p>
+
+<h2>Use it</h2>
+<p>Give Claude the link and say what you want. For example:</p>
+<ul>
+<li>“Speed up this talk with Rubato: https://example.com/talk.mp4”</li>
+<li>“Use Rubato on https://example.com/meeting.mp4 with a 1.3x baseline and tell me what it slowed down for.”</li>
+<li>“Make this lecture shorter without cutting anything, and keep the key points at normal speed: https://example.com/lecture.mp4”</li>
+</ul>
+<p>Claude starts the job, waits for it, and replies with the new length, the time saved, the passages that were slowed down or sped up, and a download link.</p>
+
+<h2>Tools</h2>
+<table>
+<tr><th>Tool</th><th>Type</th><th>What it does</th></tr>
+<tr><td><code>speed_up_video</code></td><td>Write</td><td>Starts a job from a link. Options: <code>base</code> (ordinary passages, default 1.2), <code>slow</code> (takeaways, lists, key numbers, default 1.0), <code>fast</code> (filler, default 1.5), <code>silence</code> (dead air, default 2.0), <code>language</code> (spoken language code, detected if blank). Returns a job id.</td></tr>
+<tr><td><code>get_result</code></td><td>Read-only</td><td>Reports the stage of a job. When it is done, returns the original and new length, time saved, average speed, the recognised passages with their speeds, and a download link.</td></tr>
+</table>
+
+<h2>How it decides</h2>
+<p>Rubato finds pauses from the audio, transcribes the speech, and recognises sentences that announce a takeaway, start or continue a list, or carry key numbers. Those stay at the slow speed. Logistics and hesitation get the fast speed, and dead air the fastest. The video is re-timed with ffmpeg; no content is generated or removed.</p>
+
+<h2>Limits and data</h2>
+<ul>
+<li>One job runs at a time, so a job may wait in a queue.</li>
+<li>The built-in phrases are English. Other languages are transcribed, but fewer passages are recognised.</li>
+<li>The downloaded file is deleted as soon as processing ends; the result is deleted after 30 minutes. See the <a href="/privacy">privacy policy</a>.</li>
+</ul>
+
+<h2>Support</h2>
+<p><a href="{{REPO}}/issues/new?template=problem.yml">Report a problem</a> or <a href="{{REPO}}/issues/new?template=feedback.yml">give feedback</a> on GitHub. Source code: <a href="{{REPO}}">github.com/andreolf/rubato</a> (MIT).</p>
+</main></body></html>

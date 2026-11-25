@@ -363,6 +363,11 @@ async def index():
     return page("index.html")
 
 
+@app.get("/connector", response_class=HTMLResponse)
+async def connector_docs():
+    return page("connector.html")
+
+
 @app.get("/privacy", response_class=HTMLResponse)
 async def privacy():
     return page("privacy.html")
@@ -383,8 +388,13 @@ async def robots():
 async def sitemap():
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-            f"<url><loc>{SITE_URL}/</loc></url><url><loc>{SITE_URL}/privacy</loc></url></urlset>\n")
+            f"<url><loc>{SITE_URL}/</loc></url><url><loc>{SITE_URL}/connector</loc></url><url><loc>{SITE_URL}/privacy</loc></url></urlset>\n")
     return PlainTextResponse(body, media_type="application/xml")
+
+
+@app.get("/icon.png")
+async def icon():
+    return FileResponse(os.path.join(STATIC, "icon.png"), media_type="image/png")
 
 
 @app.get("/og.svg")
@@ -414,7 +424,14 @@ if mcp_server is not None:
         """
         parts = urllib.parse.urlsplit(video_url.strip())
         if parts.scheme not in ("http", "https") or not parts.hostname:
-            raise ValueError("video_url must be a public http or https link to a media file")
+            return {"stage": "error",
+                    "message": "video_url must be a public http or https link that points directly "
+                               "to a video or audio file, for example https://example.com/talk.mp4"}
+        for label, value, lo, hi in (("base", base, 1.0, 2.0), ("slow", slow, 0.5, 2.0),
+                                     ("fast", fast, 1.0, 3.0), ("silence", silence, 1.0, 6.0)):
+            if not lo <= value <= hi:
+                return {"stage": "error",
+                        "message": f"{label} must be between {lo:g} and {hi:g}; got {value:g}"}
         folder = os.path.join(WORK, uuid.uuid4().hex)
         os.makedirs(folder)
         ext = os.path.splitext(parts.path)[1].lower()
