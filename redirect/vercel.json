@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://www.tryrubato.com/$1", "permanent": true }
+  ]
+}
