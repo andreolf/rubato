@@ -1,147 +1,60 @@
 # Rubato Benchmark Results
 
-**Status**: Not yet run - all external sources failed
+- **CPU**: Intel(R) Xeon(R) Processor (8 vCPUs), 15.6 GB RAM, no GPU
+- **OS**: Linux-6.12.113+-x86_64-with-glibc2.41
+- **ffmpeg**: ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers
+- **faster-whisper**: 1.2.1 (ctranslate2 4.8.4)
+- **Rubato commit**: b863ed2827f3278fc3851d9012440a2f0f5924b4
 
-## Issue
+**How to read it.** *WER* = word error rate of the Rubato output's transcript against the original's transcript, both made by the same judge (faster-whisper `small.en`, batched, beam 5, temperature 0). 0 means every word survived. *Processing* = wall time of `rubato auto` (analyse + plan + render, transcript supplied) per minute of input; Rubato's own speech-to-text (`base`) is listed per clip below.
 
-The benchmark could not be completed because all external video download sources failed after extensive retry attempts. The Cloud Agent environment has restricted network egress that blocks access to educational content providers.
+## Summary
 
-**Comprehensive Attempt Made**: Tried 10+ URLs across 4 source categories with 3 retries each (exponential backoff: 2s, 4s, 8s). See [DOWNLOAD_FAILURES.md](../DOWNLOAD_FAILURES.md) for complete failure details.
+| Clip | Preset | Duration cut | Effective speed | WER vs original | Processing (s/min) |
+|------|--------|--------------|-----------------|-----------------|--------------------|
+| nasa-interview | default | 26.65% | 1.363x | 0.0115 | 8.50 |
+| nasa-interview | conservative | 16.81% | 1.202x | 0.0202 | 9.29 |
+| nasa-interview | aggressive | 33.51% | 1.504x | 0.0086 | 8.22 |
+| wikimania-privacy-talk | default | 22.70% | 1.294x | 0.0048 | 4.02 |
+| wikimania-privacy-talk | conservative | 13.62% | 1.158x | 0.0048 | 3.98 |
+| wikimania-privacy-talk | aggressive | 29.41% | 1.417x | 0.0080 | 3.56 |
+| wikimania-bot-talk | default | 22.86% | 1.296x | 0.0321 | 2.55 |
+| wikimania-bot-talk | conservative | 13.60% | 1.157x | 0.0292 | 2.76 |
+| wikimania-bot-talk | aggressive | 29.90% | 1.427x | 0.0321 | 2.44 |
 
-## What Was Attempted
+## Per clip
 
-1. **Script Setup**: Complete benchmark pipeline with WER calculation, duration measurement, and processing time tracking
-2. **Video Sources**: Attempted 4 categories of openly licensed sources:
-   - Mozilla Common Voice (CC0) - 2 URLs, 3 retries each - **FAILED: timeout**
-   - Internet Archive/LibriVox (Public Domain) - 4 URLs, 3 retries each - **FAILED: 503/timeout**
-   - Wikimedia Commons (CC-BY) - 2 URLs, 3 retries each - **FAILED: timeout**
-   - NASA (Public Domain) - 2 URLs queued - **NOT REACHED**
-3. **Network Environment**: Cloud Agent VM with restricted egress - cannot reach archive.org, wikimedia.org, mozilla CDN, nasa.gov
-4. **Alternative Attempts**: Checked for local TTS tools (espeak, festival) - **NONE INSTALLED**
+### nasa-interview
 
-**Complete failure details**: See [DOWNLOAD_FAILURES.md](../DOWNLOAD_FAILURES.md) with all URLs, retry attempts, and error patterns.
+- Source: NASA SVS 14327, Lesley Ott 2023 Earth Day interview (first 300 s), via Wikimedia Commons
+- License: Public Domain (NASA)
+- Duration: 300.02 s, 694 words (judge transcript)
+- Rubato speech-to-text (`base`): 6.83 s (1.37 s per minute)
 
-## Next Steps to Complete Benchmark
+- **default** (slow 1.0, base 1.2, fast 1.5, silence 2.0): 300.02 s -> 220.07 s, WER 0.0115 (8 edits / 694 words), processing 42.52 s
+- **conservative** (slow 1.0, base 1.1, fast 1.3, silence 1.5): 300.02 s -> 249.59 s, WER 0.0202 (14 edits / 694 words), processing 46.47 s
+- **aggressive** (slow 1.0, base 1.3, fast 1.75, silence 2.5): 300.02 s -> 199.49 s, WER 0.0086 (6 edits / 694 words), processing 41.11 s
 
-To generate actual results:
+### wikimania-privacy-talk
 
-1. **Wait for service availability**: Retry when Internet Archive is accessible
-2. **Or use alternative sources**: Replace fetch_videos.sh URLs with accessible alternatives
-3. **Or provide local videos**: Place 2-3 talking-head MP4 files in `work/` directory and update test_videos list in run_benchmark.py
+- Source: Research and Privacy on Wikipedia, Wikimania 2025 lightning talk, Eli Asikin-Garmager, via Wikimedia Commons
+- License: CC0 1.0
+- Duration: 283.46 s, 627 words (judge transcript)
+- Rubato speech-to-text (`base`): 8.25 s (1.75 s per minute)
+- Human captions (624 words): judge WER on the original 0.0144; on outputs: default 0.0192, conservative 0.0144, aggressive 0.0128
 
-```bash
-# Manual video placement
-cp your-lecture-1.mp4 work/mit-lecture.mp4
-cp your-lecture-2.mp4 work/astronomy-lecture.mp4
-cp your-lecture-3.mp4 work/librivox-talk.mp4
+- **default** (slow 1.0, base 1.2, fast 1.5, silence 2.0): 283.46 s -> 219.12 s, WER 0.0048 (3 edits / 627 words), processing 18.99 s
+- **conservative** (slow 1.0, base 1.1, fast 1.3, silence 1.5): 283.46 s -> 244.85 s, WER 0.0048 (3 edits / 627 words), processing 18.82 s
+- **aggressive** (slow 1.0, base 1.3, fast 1.75, silence 2.5): 283.46 s -> 200.08 s, WER 0.0080 (5 edits / 627 words), processing 16.82 s
 
-# Then run benchmark
-python3 run_benchmark.py
-```
+### wikimania-bot-talk
 
-## Expected Results Format
+- Source: Wikimania BoT candidate lightning talk, Fjmustak (Wikimedia Foundation), via Wikimedia Commons
+- License: CC BY 4.0
+- Duration: 178.17 s, 343 words (judge transcript)
+- Rubato speech-to-text (`base`): 4.44 s (1.49 s per minute)
 
-Once the benchmark runs with real speech videos, results will appear here:
+- **default** (slow 1.0, base 1.2, fast 1.5, silence 2.0): 178.17 s -> 137.44 s, WER 0.0321 (11 edits / 343 words), processing 7.58 s
+- **conservative** (slow 1.0, base 1.1, fast 1.3, silence 1.5): 178.17 s -> 153.94 s, WER 0.0292 (10 edits / 343 words), processing 8.20 s
+- **aggressive** (slow 1.0, base 1.3, fast 1.75, silence 2.5): 178.17 s -> 124.89 s, WER 0.0321 (11 edits / 343 words), processing 7.26 s
 
-### Hardware
-
-- **CPU**: (To be recorded when benchmark runs)
-- **RAM**: (To be recorded)
-- **Storage**: SSD
-- **OS**: Linux 6.12.113+
-
-### Results Summary
-
-| Video | Preset | Duration Cut % | WER | Effective Speed | Processing (s/min) |
-|-------|--------|----------------|-----|-----------------|-------------------|
-| (awaiting run) | - | - | - | - | - |
-
-### Detailed Results by Video
-
-(Results will be populated here after successful run)
-
-## Methodology
-
-### Test Videos
-
-Videos must be:
-- Openly licensed (CC-BY, CC-BY-SA, CC-BY-NC-SA, or Public Domain)
-- Talking-head format with clear speech
-- 2-3 minutes in length
-- Properly attributed (see SOURCES.md)
-
-### Metrics
-
-1. **Duration Cut %**: `(original_duration - output_duration) / original_duration * 100`
-2. **WER (Word Error Rate)**: Levenshtein distance on normalized transcripts (original vs processed)
-   - Both transcribed with faster-whisper `base` model
-   - Transcripts normalized: lowercase, punctuation removed
-   - `WER = edit_distance / reference_word_count`
-3. **Processing Time**: Total processing seconds / input video minutes
-
-### Speed Presets
-
-| Preset | Slow | Base | Fast | Silence | Use Case |
-|--------|------|------|------|---------|----------|
-| default | 1.0 | 1.2 | 1.5 | 2.0 | General purpose, balanced |
-| conservative | 1.0 | 1.1 | 1.3 | 1.5 | Minimal speedup, maximum safety |
-| aggressive | 1.0 | 1.3 | 1.75 | 2.5 | Maximum time savings |
-
-### Reproducibility
-
-- **Whisper Model**: `base` (faster-whisper) - pinned
-- **Rubato Version**: Current repository HEAD
-- **Deterministic**: Yes (same input + settings = same output)
-- **Raw Logs**: Saved in `work/` directory (not committed - see .gitignore)
-- **Results JSON**: Committed to track evolution over time
-
-## Limitations
-
-- **No Results Yet**: Benchmark has not completed a successful run
-- **Hardware Dependent**: Processing times vary significantly by CPU
-- **Whisper Variability**: Small WER variations expected between runs (~0.001-0.01)
-- **Short Videos**: 2-minute clips are fast to benchmark but may not represent hour-long content
-- **Network Dependency**: Requires external downloads unless videos are provided locally
-
-## Running the Benchmark Yourself
-
-If you have access to suitable test videos:
-
-```bash
-cd bench
-
-# Option 1: Try the download script (may fail if archive.org is down)
-./fetch_videos.sh
-
-# Option 2: Provide your own videos
-mkdir -p work
-cp your-talking-head-video-1.mp4 work/mit-lecture.mp4
-cp your-talking-head-video-2.mp4 work/astronomy-lecture.mp4
-cp your-talking-head-video-3.mp4 work/librivox-talk.mp4
-
-# Install dependencies
-pip install faster-whisper imageio-ffmpeg
-
-# Run benchmark
-python3 run_benchmark.py
-
-# Results will be written to this file
-```
-
-## Comparison with Flat Speed
-
-**Hypothesis** (to be tested): 
-
-For typical talking-head content, Rubato's variable-speed approach should achieve similar time savings to a flat 1.2x speedup while maintaining or improving comprehension by:
-- Keeping key content (takeaways, lists, numbers) at 1.0x
-- Speeding through filler and transitions at 1.5x
-- Racing through pauses at 2.0x
-
-This would result in similar WER (since no content is cut) but hypothetically better viewer comprehension (not measured by WER alone).
-
-**Testing Required**: This hypothesis needs real benchmark data to validate or refute.
-
----
-
-**Last Updated**: 2024-11-26  
-**Status**: Infrastructure complete, awaiting successful video downloads

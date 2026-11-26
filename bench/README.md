@@ -1,124 +1,65 @@
 # Rubato Benchmark
 
-Reproducible benchmark measuring Rubato's performance and accuracy across different speed presets.
+Reproducible benchmark of Rubato on real, openly licensed speech clips, across three speed presets.
 
 ## Metrics
 
-- **Duration Cut %**: Percentage reduction in runtime (output duration vs input duration)
-- **WER (Word Error Rate)**: Transcription accuracy preservation, measured by comparing Whisper transcripts of original vs processed video
-- **Processing Time**: Seconds of processing time per minute of input video
+- **Duration cut %**: how much shorter the output is than the input.
+- **WER vs original**: word error rate of the output's transcript against the original's transcript.
+  Both transcripts come from the same pinned "judge" model, so 0 means every word survived.
+- **Processing (s/min)**: wall time of `rubato auto` (analyse + plan + render, with the transcript
+  supplied) per minute of input. Rubato's own speech-to-text time is reported separately per clip.
 
-## Methodology
+## Method
 
-1. **Test Videos**: Uses openly licensed talking-head videos (CC-BY or Public Domain)
-2. **Transcription**: Both original and processed videos are transcribed using `faster-whisper` with the `base` model (pinned for reproducibility)
-3. **WER Calculation**: Computes Levenshtein edit distance between normalized transcripts
-4. **Speed Presets**: Tests multiple configurations:
-   - `default`: slow=1.0, base=1.2, fast=1.5, silence=2.0
-   - `conservative`: slow=1.0, base=1.1, fast=1.3, silence=1.5
-   - `aggressive`: slow=1.0, base=1.3, fast=1.75, silence=2.5
+1. **Clips**: three real recordings from Wikimedia Commons (an interview and two conference talks,
+   178-300 s each). See [SOURCES.md](SOURCES.md) for URLs, licenses and preprocessing.
+2. **Planning transcript**: `rubato.py transcribe` with Rubato's default `base` model, passed to
+   `rubato auto --transcript` so every preset is timed identically.
+3. **Presets**:
+   - `default`: slow 1.0, base 1.2, fast 1.5, silence 2.0
+   - `conservative`: slow 1.0, base 1.1, fast 1.3, silence 1.5
+   - `aggressive`: slow 1.0, base 1.3, fast 1.75, silence 2.5
+4. **Scoring**: the original and each output are transcribed by faster-whisper `small.en`
+   (batched/VAD decoding, beam 5, temperature 0, `no_repeat_ngram_size=6`, language `en`).
+   WER = word-level Levenshtein distance / words in the original's transcript, after lowercasing
+   and stripping punctuation.
+5. **Judge check against humans**: one clip (`wikimania-privacy-talk`) ships with human captions
+   ([references/](references/)). The judge scores 1.44% WER against them on the original, so the judge is
+   accurate enough to score with.
 
-## Running the Benchmark
+Why not `base` as the judge: on these clips Whisper `base`, and the default sequential decoder
+with `small.en`, dropped whole passages or looped on a phrase, which put WER between 15% and over 100%,
+including on the untouched original. That measured Whisper, not Rubato.
 
-### Prerequisites
-
-```bash
-# Install dependencies
-pip install faster-whisper imageio-ffmpeg
-
-# Or use uv (recommended)
-uv pip install faster-whisper imageio-ffmpeg
-```
-
-Requires:
-- Python 3.8+
-- ffmpeg (for video processing)
-- ffprobe (usually comes with ffmpeg)
-
-### Quick Start
+## Running
 
 ```bash
+pip install faster-whisper      # plus ffmpeg/ffprobe on PATH
 cd bench
-
-# 1. Fetch test videos
-./fetch_videos.sh
-
-# 2. Run benchmark
-python3 run_benchmark.py
-
-# Results will be in results/benchmark_results.json and results/benchmark_results.md
+./fetch_videos.sh               # downloads and converts the 3 clips into work/
+python3 run_benchmark.py        # add --delete-outputs to save disk
 ```
 
-### Using Your Own Videos
+Outputs:
+- `results/benchmark_results.json`: every number, plus hardware and versions
+- `results/benchmark_results.md`: tables
+- `results/logs/<clip>.<preset>.txt`: raw stdout/stderr of each `rubato auto` run
+- `results/transcripts/`: judge transcripts of every original and output
+- `results/run_output.txt`: console output of the run
 
-For more realistic benchmarks, replace the synthetic test video with actual talking-head content:
-
-```bash
-# Copy your video to the work directory
-cp your-lecture.mp4 work/sample1.mp4
-
-# Update run_benchmark.py test_videos list with proper metadata
-# Then run the benchmark
-python3 run_benchmark.py
-```
-
-## Reproducibility
-
-Fixed versions:
-- **Whisper Model**: `base` (faster-whisper)
-- **Rubato**: Current repository version
-- **Random Seeds**: N/A (Rubato is deterministic given the same input and settings)
-
-The benchmark script captures:
-- Exact preset parameters
-- Input video metadata
-- Processing timestamps
-- Full stdout/stderr logs (in JSON output)
-
-## Hardware
-
-Benchmark results are hardware-dependent. Document your system when sharing results:
-
-```bash
-# Example hardware specification
-# CPU: AMD EPYC 7763 64-Core Processor
-# RAM: 32 GB
-# Storage: SSD
-# OS: Linux 6.12.113+
-```
+Media files stay in `work/` (git-ignored).
 
 ## Results
 
-See `results/benchmark_results.md` for the latest run, or check the main README's Benchmarks section.
+See [results/benchmark_results.md](results/benchmark_results.md) and the Benchmarks section of the
+main README. Measured on an 8-vCPU Intel Xeon (KVM), 15.6 GB RAM, no GPU.
 
 ## Limitations
 
-- **Synthetic Test Video**: Default test video is synthetic (tone-based). Real talking-head videos will show different characteristics.
-- **WER Variability**: Whisper transcription has some randomness; WER may vary slightly between runs.
-- **Short Clips**: Benchmark uses short clips for speed. Longer videos may show different performance characteristics.
-- **Single-threaded**: Processing is currently single-threaded; timing reflects this.
-
-For production benchmarks, use multiple real talking-head videos of varying lengths and styles.
-
-## Extending the Benchmark
-
-To add more test videos:
-
-1. Add video info to `run_benchmark.py` `test_videos` list
-2. Place video file in `work/` directory
-3. Run benchmark
-
-To add more presets:
-
-1. Add preset dict to `run_benchmark.py` `presets` list
-2. Run benchmark
-
-## Raw Logs
-
-All raw logs and intermediate files are preserved in the `work/` directory:
-- Original and processed videos
-- Transcript JSON files
-- Plan JSON files
-- Processing logs
-
-Commit the `results/` directory to track benchmark evolution over time.
+- Three clips, all English, 3-5 minutes. Longer or noisier recordings may behave differently.
+- WER under about 3% is at the judge's noise floor: the `aggressive` preset sometimes scores
+  lower than `conservative`, which is noise, not a real improvement.
+- WER measures whether the words are still recognisable, not how pleasant the result sounds.
+- Processing time varies by clip (2.4-9.3 s per minute here) and depends on the x264 preset
+  (Rubato default `medium`) and the CPU.

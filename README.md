@@ -154,43 +154,30 @@ Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--flat 1.25` (o
 
 ## Benchmarks
 
-Rubato includes a reproducible benchmark suite to measure:
-- **Duration Cut %**: Runtime reduction (output vs input duration)  
-- **WER (Word Error Rate)**: Transcription accuracy preservation
-- **Processing Time**: Seconds per minute of video
+Measured on three real, openly licensed recordings (a NASA interview and two Wikimania talks, 3-5 minutes each), on an 8-vCPU Intel(R) Xeon(R) Processor (KVM), 15.6 GB RAM, no GPU.
 
-**Current Status**: Benchmark infrastructure is complete but awaiting successful test video downloads (external sources temporarily unavailable). See [`bench/results/benchmark_results.md`](bench/results/benchmark_results.md) for details.
+| Clip | Preset | Duration cut | WER vs original | Processing (s per min of video) |
+|------|--------|--------------|-----------------|---------------------------------|
+| nasa-interview (300 s) | default | 26.65% | 1.15% | 8.50 |
+| nasa-interview (300 s) | conservative | 16.81% | 2.02% | 9.29 |
+| nasa-interview (300 s) | aggressive | 33.51% | 0.86% | 8.22 |
+| wikimania-privacy-talk (283 s) | default | 22.70% | 0.48% | 4.02 |
+| wikimania-privacy-talk (283 s) | conservative | 13.62% | 0.48% | 3.98 |
+| wikimania-privacy-talk (283 s) | aggressive | 29.41% | 0.80% | 3.56 |
+| wikimania-bot-talk (178 s) | default | 22.86% | 3.21% | 2.55 |
+| wikimania-bot-talk (178 s) | conservative | 13.60% | 2.92% | 2.76 |
+| wikimania-bot-talk (178 s) | aggressive | 29.90% | 3.21% | 2.44 |
 
-### Methodology
+Presets (slow / base / fast / silence): default 1.0 / 1.2 / 1.5 / 2.0, conservative 1.0 / 1.1 / 1.3 / 1.5, aggressive 1.0 / 1.3 / 1.75 / 2.5.
 
-- **Test Videos**: Openly licensed (CC-BY/Public Domain) talking-head lectures
-- **Transcription**: faster-whisper `base` model, pinned for reproducibility
-- **WER Calculation**: Levenshtein distance on normalized transcripts (original vs processed)
-- **Multiple Presets**: default (1.0/1.2/1.5/2.0), conservative (1.0/1.1/1.3/1.5), aggressive (1.0/1.3/1.75/2.5)
+- **WER vs original**: the original and the output are both transcribed by faster-whisper `small.en`; WER is the word-level edit distance between the two transcripts. On the clip with human captions the same model scores 1.44% WER on the untouched original, so differences of a few percent are within its noise.
+- **Processing**: wall time of `rubato auto` (analyse, plan, render) with the transcript supplied. Rubato's own `base` transcription added 1.37-1.75 s per minute of video.
 
-### Running the Benchmark
+Full results, raw logs and transcripts: [`bench/results/`](bench/results/benchmark_results.md). Method, sources and licenses: [`bench/README.md`](bench/README.md), [`bench/SOURCES.md`](bench/SOURCES.md).
 
 ```bash
-cd bench
-
-# Option 1: Try fetching test videos (requires Internet Archive access)
-./fetch_videos.sh
-
-# Option 2: Provide your own talking-head videos
-mkdir -p work
-cp your-video.mp4 work/mit-lecture.mp4
-# (see bench/README.md for details)
-
-# Install dependencies
-pip install faster-whisper imageio-ffmpeg
-
-# Run benchmark
-python3 run_benchmark.py
+cd bench && ./fetch_videos.sh && python3 run_benchmark.py
 ```
-
-Results are saved to `bench/results/benchmark_results.json` and `bench/results/benchmark_results.md`.
-
-For complete documentation, see [`bench/README.md`](bench/README.md) and [`bench/SOURCES.md`](bench/SOURCES.md) for video sources and licensing.
 
 ## FAQ
 

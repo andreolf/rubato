@@ -1,0 +1,350 @@
+1
+00:00:04,007 --> 00:00:08,007
+(Eli Asikin-Garmager)
+Openness, research, and privacy. Can we have
+
+2
+00:00:08,007 --> 00:00:12,007
+(Eli Asikin-Garmager)
+it all? Every month, Wikipedia is visited
+
+3
+00:00:12,007 --> 00:00:16,007
+(Eli Asikin-Garmager)
+over 15 billion times. But it's not just a go-to destination for
+
+4
+00:00:16,007 --> 00:00:20,007
+(Eli Asikin-Garmager)
+curious readers. Wikipedia is also a vital resource for
+
+5
+00:00:20,007 --> 00:00:24,007
+(Eli Asikin-Garmager)
+researchers around the world. Did you know that on average every year researchers
+
+6
+00:00:24,007 --> 00:00:28,007
+(Eli Asikin-Garmager)
+use or refer to Wikipedia and more than 130,000
+
+7
+00:00:28,007 --> 00:00:32,007
+(Eli Asikin-Garmager)
+articles and publish a minimum of roughly 500 research papers about
+
+8
+00:00:32,007 --> 00:00:36,007
+(Eli Asikin-Garmager)
+Wikipedia itself. But there's a side of this research that's less
+
+9
+00:00:36,007 --> 00:00:40,007
+(Eli Asikin-Garmager)
+discussed. How it affects the people behind the
+
+10
+00:00:40,007 --> 00:00:44,007
+(Eli Asikin-Garmager)
+edits. Wikipedia may be open to all, but its openness introduces
+
+11
+00:00:44,007 --> 00:00:48,007
+(Eli Asikin-Garmager)
+a tension between transparency and privacy. Every
+
+12
+00:00:48,007 --> 00:00:52,007
+(Eli Asikin-Garmager)
+edit is public. Every talk page is searchable. It's an
+
+13
+00:00:52,007 --> 00:00:56,007
+(Eli Asikin-Garmager)
+invaluable resource for researchers who have a commitment to use their skills to
+
+14
+00:00:56,007 --> 00:01:00,007
+(Eli Asikin-Garmager)
+transparently communicate to the world the opportunities they
+
+15
+00:01:00,007 --> 00:01:04,007
+(Eli Asikin-Garmager)
+see. Meanwhile, editors come from all over the world as well.
+
+16
+00:01:04,007 --> 00:01:08,007
+(Eli Asikin-Garmager)
+Some use their real names, others work anonymously, sometimes because their
+
+17
+00:01:08,007 --> 00:01:12,007
+(Eli Asikin-Garmager)
+edits could put them at risk, especially in places with censorship or
+
+18
+00:01:12,007 --> 00:01:16,007
+(Eli Asikin-Garmager)
+political unrest. It can be difficult for researchers to balance the
+
+19
+00:01:16,007 --> 00:01:20,007
+(Eli Asikin-Garmager)
+obligation for transparent research communication with privacy
+
+20
+00:01:20,007 --> 00:01:24,007
+(Eli Asikin-Garmager)
+and anonymity expectations.
+
+21
+00:01:24,007 --> 00:01:28,007
+(Eli Asikin-Garmager)
+In response to a request from the English Wikipedia Arbitration Committee,
+
+22
+00:01:28,007 --> 00:01:32,007
+(Eli Asikin-Garmager)
+the Wikipdia Foundation prioritized a white paper. Its goal is to
+
+23
+00:01:32,007 --> 00:01:36,007
+(Eli Asikin-Garmager)
+offer guidance to researchers on how to study Wikipedia in
+
+24
+00:01:36,007 --> 00:01:40,007
+(Eli Asikin-Garmager)
+ways that respect editor privacy and community
+
+25
+00:01:40,007 --> 00:01:44,007
+(Eli Asikin-Garmager)
+values. In collaboration between the Wikipedia Foundation's research
+
+26
+00:01:44,007 --> 00:01:48,007
+(Eli Asikin-Garmager)
+team, human rights team, and an external research ethicist,
+
+27
+00:01:48,007 --> 00:01:52,007
+(Eli Asikin-Garmager)
+the research and privacy on Wikipedia white paper was recently
+
+28
+00:01:52,007 --> 00:01:56,007
+(Eli Asikin-Garmager)
+published as an open science framework preprint. Today, I want to give you
+
+29
+00:01:56,007 --> 00:02:00,007
+(Eli Asikin-Garmager)
+a preview of what you can find in this white paper.
+
+30
+00:02:00,007 --> 00:02:04,007
+(Eli Asikin-Garmager)
+We provide recommendations to researchers. For one, for example, we
+
+31
+00:02:04,007 --> 00:02:08,007
+(Eli Asikin-Garmager)
+ask researchers to know the norms and guidelines, review Wikipedia's
+
+32
+00:02:08,007 --> 00:02:12,007
+(Eli Asikin-Garmager)
+terms of use and the universal code of conduct before they start
+
+33
+00:02:12,007 --> 00:02:16,007
+(Eli Asikin-Garmager)
+collecting or analyzing data. Create a public
+
+34
+00:02:16,007 --> 00:02:20,007
+(Eli Asikin-Garmager)
+project page on metawiki. Avoid
+
+35
+00:02:20,007 --> 00:02:24,007
+(Eli Asikin-Garmager)
+publishing usernames, diffs, or generally sharing information if it could be used to
+
+36
+00:02:24,007 --> 00:02:28,007
+(Eli Asikin-Garmager)
+identify contributors, especially without
+
+37
+00:02:28,007 --> 00:02:32,007
+(Eli Asikin-Garmager)
+consent. What's low risk in one country might be dangerous in
+
+38
+00:02:32,007 --> 00:02:36,007
+(Eli Asikin-Garmager)
+another. Consider editor's geographic, political, and social
+
+39
+00:02:36,007 --> 00:02:40,007
+(Eli Asikin-Garmager)
+contexts. And finally, recognize the significance of
+
+40
+00:02:40,007 --> 00:02:44,007
+(Eli Asikin-Garmager)
+trade-offs you may have to make when balancing your obligations as a
+
+41
+00:02:44,007 --> 00:02:48,007
+(Eli Asikin-Garmager)
+researcher to navigate the tension between sharing
+
+42
+00:02:48,007 --> 00:02:52,007
+(Eli Asikin-Garmager)
+transparently while also maintaining the privacy and anonymity of readers and
+
+43
+00:02:52,007 --> 00:02:56,007
+(Eli Asikin-Garmager)
+editors. The paper also
+
+44
+00:02:56,007 --> 00:03:00,007
+(Eli Asikin-Garmager)
+contains tips and guidance for
+
+45
+00:03:00,007 --> 00:03:04,007
+(Eli Asikin-Garmager)
+Wikipedians. First, learn about trade-offs researchers need to
+
+46
+00:03:04,007 --> 00:03:08,007
+(Eli Asikin-Garmager)
+make. One of the challenges researchers face when studying Wikipedia and
+
+47
+00:03:08,007 --> 00:03:12,007
+(Eli Asikin-Garmager)
+communicating their findings is balancing their obligation to share the
+
+48
+00:03:12,007 --> 00:03:16,007
+(Eli Asikin-Garmager)
+truth with the world in a transparent way while respecting
+
+49
+00:03:16,007 --> 00:03:20,007
+(Eli Asikin-Garmager)
+Wikipedia community's diverse and varying expectations with
+
+50
+00:03:20,007 --> 00:03:24,007
+(Eli Asikin-Garmager)
+regards to privacy. As a result, sometimes the
+
+51
+00:03:24,007 --> 00:03:28,007
+(Eli Asikin-Garmager)
+choices researchers may make in tension with what as a
+
+52
+00:03:28,007 --> 00:03:32,007
+(Eli Asikin-Garmager)
+Wikipedian you would expect or wish for. In the white
+
+53
+00:03:32,007 --> 00:03:36,007
+(Eli Asikin-Garmager)
+paper, we provide some guidance about how to plan for and take action in such
+
+54
+00:03:36,007 --> 00:03:40,007
+(Eli Asikin-Garmager)
+cases. Understand the risks.
+
+55
+00:03:40,007 --> 00:03:44,007
+(Eli Asikin-Garmager)
+Even your editing history can reveal clues about your identity. Be
+
+56
+00:03:44,007 --> 00:03:48,007
+(Eli Asikin-Garmager)
+especially cautious if you edit on politically, culturally, socially, or
+
+57
+00:03:48,007 --> 00:03:52,007
+(Eli Asikin-Garmager)
+religiously sensitive topics. Explore the
+
+58
+00:03:52,007 --> 00:03:56,007
+(Eli Asikin-Garmager)
+Wikipdia Foundation's digital security trainings and most
+
+59
+00:03:56,007 --> 00:04:00,007
+(Eli Asikin-Garmager)
+importantly engage on your terms. Ask questions, learn about
+
+60
+00:04:00,007 --> 00:04:04,007
+(Eli Asikin-Garmager)
+projects, and raise concerns proactively with
+
+61
+00:04:04,007 --> 00:04:08,007
+(Eli Asikin-Garmager)
+researchers. Every successful project requires
+
+62
+00:04:08,007 --> 00:04:12,007
+(Eli Asikin-Garmager)
+research to evolve and improve over time. Researchers are
+
+63
+00:04:12,007 --> 00:04:16,007
+(Eli Asikin-Garmager)
+motivated to contribute their expertise to help Wikipedia
+
+64
+00:04:16,007 --> 00:04:20,007
+(Eli Asikin-Garmager)
+evolve. We need to support them in doing successful research on the
+
+65
+00:04:20,007 --> 00:04:24,007
+(Eli Asikin-Garmager)
+projects, including balancing the need for transparency with
+
+66
+00:04:24,007 --> 00:04:28,007
+(Eli Asikin-Garmager)
+privacy and anonymity expectations of Wikipedia
+
+67
+00:04:28,007 --> 00:04:32,007
+(Eli Asikin-Garmager)
+editors. Help us help the researchers and other editors
+
+68
+00:04:32,007 --> 00:04:36,007
+(Eli Asikin-Garmager)
+by reading the white paper and providing your feedback at the meta page through
+
+69
+00:04:36,007 --> 00:04:40,007
+(Eli Asikin-Garmager)
+August 31st. Thanks for your
+
+70
+00:04:40,007 --> 00:04:44,007
+(Eli Asikin-Garmager)
+attention.
+

@@ -1,0 +1,19 @@
+# stdout
+source   5:00  ->  output 4:09   (effective 1.202x; flat 1.1x would give 4:32)
+speed    |█████▃▁▁▁▂▂███▃▂▂▂▆███▄▂▃▃▂▂▂▁▁▁▁▇███▄▂▂▂▂▂▄▃▂▂▂▂▂▄▅▃▅███▆▂▂▂▄▅▅|   low bar = 1x, tall bar = 1.5x
+share    1x 13%  1.1x 45%  1.15x 2%  1.25x 1%  1.3x 8%  1.5x 31%
+segments 26
+content  2 takeaway   (from the transcript)
+     0:25  1x  takeaway  Yeah, you know a lot of people think NASA they think of us looking out into space But…
+     2:16  1x  takeaway  actually create a greater fire effect in following years And so that's one reason why…
+
+# stderr
+rubato: analysing audio…
+rubato: analysing picture…
+rubato: wrote work/nasa-interview.conservative.plan.json
+
+rubato: audio 1/3
+rubato: audio 2/3
+rubato: audio 3/3
+rubato: encoding…
+rubato: wrote work/nasa-interview.conservative.mp4
