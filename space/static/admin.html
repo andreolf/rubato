@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/svg+xml" href="/icon.svg">
+<title>Usage · Rubato</title>
+<style>
+:root{--ink:#171512;--text2:#4a463f;--muted:#6b665e;--line:#e7e2d9;--grid:#efebe3;--bg:#faf8f4;--card:#fff;--accent:#c2380f;
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--bad:#d03b3b;--radius:14px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:28px 20px 72px}
+a{color:var(--accent)}
+h1{font-size:26px;letter-spacing:-.02em;margin:0}
+h2{font-size:16px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:20px}
+header .left{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+header .left a{font-size:14px;text-decoration:none}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:7px 13px;font:inherit;color:var(--text2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 13px;font:inherit;color:var(--text2);cursor:pointer}
+.btn:hover,.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed=true]:hover{color:#fff}
+.note{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;color:var(--text2);font-size:14px}
+.note.warn{border-color:#f0c9a8;background:#fff6ec}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:14px}
+.tile .label{color:var(--muted);font-size:13.5px}
+.tile .value{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.2;margin:2px 0;font-variant-numeric:tabular-nums}
+.tile .foot{color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;margin-bottom:14px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font:12px ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text2);margin:0 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.45;white-space:nowrap;z-index:5;transform:translate(-50%,-100%)}
+.tip b{font-weight:600}.tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.empty{color:var(--muted);font-size:14px;padding:18px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-weight:500;color:var(--muted);text-align:left;font-size:13px;padding:6px 10px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 10px 7px 0;border-bottom:1px solid var(--grid);color:var(--text2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td:last-child,th:last-child{padding-right:0}
+#recent td,#recent th,#dayTable td,#dayTable th{padding-right:18px}
+.rows td:first-child{color:var(--ink);overflow-wrap:anywhere}
+.barcell{position:relative}.barcell span{position:relative}
+.barcell::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:var(--w,0%);background:#e3eefb;border-radius:4px}
+.scroll{overflow-x:auto}
+.ok{color:var(--ink)}.fail{color:var(--bad)}
+.funnel{display:grid;gap:12px;margin-top:6px}
+.funnel .row{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center}
+.funnel .name{font-size:14px;color:var(--text2)}
+.funnel .track{display:flex;align-items:center;gap:10px;min-width:0}
+.funnel .bar{height:22px;background:var(--s1);border-radius:0 4px 4px 0;min-width:2px}
+.funnel .val{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14px}
+.funnel .val small{color:var(--muted);font-size:13px}
+details{margin-top:10px}summary{cursor:pointer;color:var(--muted);font-size:13.5px}
+#login{max-width:400px;margin:12vh auto 0}
+#login h1{margin-bottom:6px}
+#login form{display:flex;gap:8px;margin-top:16px}
+#login input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:var(--card);color:var(--ink)}
+#login button{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer}
+#login .err{color:var(--bad);font-size:14px;min-height:21px;margin-top:10px}
+@media(max-width:520px){.funnel .row{grid-template-columns:1fr;gap:4px}}
+</style></head>
+<body><main>
+
+<section id="login" hidden>
+  <h1>Rubato usage</h1>
+  <p class="sub">Enter the admin password to see how the site is being used.</p>
+  <form id="loginForm"><input id="pw" type="password" autocomplete="current-password" placeholder="Admin password" aria-label="Admin password" required><button>Open</button></form>
+  <div class="err" id="loginErr" role="alert"></div>
+</section>
+
+<section id="dash" hidden>
+  <header>
+    <div class="left"><h1>Rubato usage</h1><a href="/">Open the site →</a></div>
+    <div class="controls">
+      <div class="seg" id="range" role="group" aria-label="Period">
+        <button data-d="7">7 days</button><button data-d="30">30 days</button><button data-d="90">90 days</button>
+      </div>
+      <button class="btn" id="refresh">Refresh</button>
+      <button class="btn" id="out">Sign out</button>
+    </div>
+  </header>
+  <div id="storage"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid2">
+    <div class="card"><h2>Visitors per day</h2><p class="sub">People who opened the site, counted once a day. Crawlers are left out.</p>
+      <div class="chart" id="cVisitors"></div></div>
+    <div class="card"><h2>Recordings processed per day</h2><p class="sub">Finished jobs, by where they came from.</p>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Upload</span><span><i style="background:var(--s2)"></i>Sample</span><span><i style="background:var(--s3)"></i>Connector</span></div>
+      <div class="chart" id="cJobs"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px"><details><summary>Show the daily numbers as a table</summary><div class="scroll" id="dayTable"></div></details></div>
+
+  <div class="grid2">
+    <div class="card"><h2>From visit to download</h2><p class="sub">Website visitors only. The connector is not included, because its calls arrive from Claude's servers, not from the person.</p>
+      <div class="funnel" id="funnel"></div></div>
+    <div class="card"><h2>Where visitors come from</h2><p class="sub">The referring site, or the tag on links like <code>?ref=x</code>.</p>
+      <div id="refs"></div></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h2>Crawlers and AI agents</h2><p class="sub">Page fetches by bots, including <code>/llms.txt</code>.</p><div id="bots"></div></div>
+    <div class="card"><h2>Why jobs fail</h2><p class="sub">Rejected uploads and failed jobs.</p><div id="errors"></div></div>
+    <div class="card"><h2>Languages and formats</h2><p class="sub">Of finished jobs. "auto" means detected.</p><div id="langs"></div><div id="kinds" style="margin-top:14px"></div></div>
+  </div>
+
+  <div class="card"><h2>Latest jobs</h2><p class="sub">No file names, links or transcripts are recorded.</p><div class="scroll" id="recent"></div></div>
+</section>
+
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = n => Math.round(n || 0).toLocaleString("en-US");
+let token = null, days = 30, data = null;
+try { token = sessionStorage.getItem("rubato-admin"); days = +sessionStorage.getItem("rubato-admin-days") || 30; } catch (e) {}
+
+function span(sec) {
+  sec = Math.round(sec || 0);
+  if (sec < 60) return sec + " s";
+  const m = Math.round(sec / 60);
+  if (m < 60) return m + " min";
+  const h = Math.floor(m / 60), r = m % 60;
+  return h + " h" + (r ? " " + r + " min" : "");
+}
+function clock(sec) { sec = Math.round(sec || 0); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); }
+const dayLabel = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-US", {month: "short", day: "numeric", timeZone: "UTC"});
+
+async function load() {
+  if (!token) return show(false);
+  let res;
+  try { res = await fetch("/api/admin/stats?days=" + days, {headers: {Authorization: "Bearer " + token}}); }
+  catch (e) { return show(false, "The server could not be reached."); }
+  if (res.status === 401 || res.status === 429) {
+    const msg = (await res.json().catch(() => ({}))).detail || "Wrong password.";
+    token = null; try { sessionStorage.removeItem("rubato-admin"); } catch (e) {}
+    return show(false, msg);
+  }
+  if (!res.ok) return show(false, "The server answered with an error (" + res.status + ").");
+  data = await res.json();
+  try { sessionStorage.setItem("rubato-admin", token); sessionStorage.setItem("rubato-admin-days", days); } catch (e) {}
+  show(true); render();
+}
+function show(signedIn, err) {
+  $("login").hidden = signedIn; $("dash").hidden = !signedIn;
+  if (!signedIn) { $("loginErr").textContent = err || ""; $("pw").value = ""; }
+}
+$("loginForm").addEventListener("submit", e => { e.preventDefault(); token = $("pw").value.trim(); load(); });
+$("out").onclick = () => { token = null; try { sessionStorage.removeItem("rubato-admin"); } catch (e) {} show(false); };
+$("refresh").onclick = load;
+$("range").onclick = e => { const d = +e.target.dataset.d; if (d) { days = d; load(); } };
+
+function change(now, before) {
+  if (!before) return "";
+  const p = Math.round((now - before) / before * 100);
+  return (p > 0 ? "+" : "") + p + "% vs the " + data.range_days + " days before";
+}
+function tile(label, value, foot) {
+  return `<div class="card tile"><div class="label">${label}</div><div class="value">${value}</div><div class="foot">${foot || "&nbsp;"}</div></div>`;
+}
+function list(el, rows, head, emptyText) {
+  if (!rows.length) { $(el).innerHTML = `<div class="empty">${emptyText}</div>`; return; }
+  const max = Math.max(...rows.map(r => r[1]));
+  $(el).innerHTML = `<table class="rows"><tr><th>${head}</th><th class="num">Count</th></tr>` + rows.map(r =>
+    `<tr><td class="barcell" style="--w:${(r[1] / max * 100).toFixed(1)}%"><span>${esc(r[0])}</span></td><td class="num">${num(r[1])}</td></tr>`).join("") + "</table>";
+}
+
+function render() {
+  const t = data.totals, p = data.previous, a = data.all_time, n = data.range_days;
+  [...$("range").children].forEach(b => b.setAttribute("aria-pressed", +b.dataset.d === n));
+
+  const st = data.storage, live = data.live || {};
+  const busy = (live.working || live.queued) ? ` Right now: ${live.working} processing, ${live.queued} waiting.` : "";
+  if (st.mode === "temporary")
+    $("storage").innerHTML = `<div class="note warn"><b>These numbers are not being kept.</b> They live on the server's temporary disk and reset whenever it restarts (last restart ${span(data.uptime_seconds)} ago). ${st.sync_error ? "The backup to Hugging Face failed to start (" + esc(st.sync_error) + "). " : ""}Set <code>HF_TOKEN</code> and <code>RUBATO_METRICS_REPO</code> on the Space to keep them.${busy}</div>`;
+  else
+    $("storage").innerHTML = `<div class="note">Counting since ${data.first_day ? dayLabel(data.first_day) : "today"}. ${st.mode === "dataset" ? "Backed up to the private dataset <code>" + esc(st.repo) + "</code> every 10 minutes." : "Stored on the server's permanent disk."}${busy}</div>`;
+
+  const ended = t.done + t.failed, rate = ended ? Math.round(t.done / ended * 100) + "%" : "–";
+  $("tiles").innerHTML =
+    tile("Visitors", num(t.visitors), change(t.visitors, p.visitors) || num(a.visitors) + " all time") +
+    tile("Recordings processed", num(t.done), change(t.done, p.done) || num(a.done) + " all time") +
+    tile("Success rate", rate, ended ? `${num(t.failed)} of ${num(ended)} failed` : "No jobs yet") +
+    tile("Viewing time saved", span(t.saved_seconds), t.done ? `from ${span(t.source_seconds)} of recordings` : "") +
+    tile("Downloads", num(t.downloads), t.done ? `${Math.round(t.downloads / t.done * 100)}% of finished jobs` : "");
+
+  bars("cVisitors", data.days, [["visitors", "Visitors", "var(--s1)"]]);
+  bars("cJobs", data.days, [["upload", "Upload", "var(--s1)"], ["sample", "Sample", "var(--s2)"], ["connector", "Connector", "var(--s3)"]]);
+  $("dayTable").innerHTML = "<table><tr><th>Day</th><th class='num'>Visitors</th><th class='num'>Page views</th><th class='num'>Upload</th><th class='num'>Sample</th><th class='num'>Connector</th><th class='num'>Failed</th></tr>" +
+    data.days.slice().reverse().map(d => `<tr><td>${dayLabel(d.date)}</td>${["visitors", "views", "upload", "sample", "connector", "failed"].map(k => `<td class="num">${num(d[k])}</td>`).join("")}</tr>`).join("") + "</table>";
+
+  const f = data.funnel, steps = [["Opened the site", f.visited], ["Started a job", f.started], ["Got a result", f.finished], ["Downloaded it", f.downloaded]];
+  $("funnel").innerHTML = f.visited ? steps.map((s, i) => {
+    const share = i && steps[i - 1][1] ? `<small> · ${Math.round(s[1] / steps[i - 1][1] * 100)}% of the step above</small>` : "";
+    return `<div class="row"><div class="name">${s[0]}</div><div class="track"><div class="bar" style="width:${Math.max(0.5, s[1] / f.visited * 62)}%"></div><div class="val">${num(s[1])}${share}</div></div></div>`;
+  }).join("") : `<div class="empty">No visitors in this period yet.</div>`;
+
+  list("refs", data.referrers, "Source", "No visits in this period yet.");
+  list("bots", data.bots, "Bot", "No crawler visits in this period yet.");
+  list("errors", data.errors, "Reason", "Nothing has failed in this period.");
+  list("langs", data.languages, "Language", "No finished jobs in this period yet.");
+  list("kinds", data.kinds.map(k => [k[0] === "audio" ? "Audio only" : "Video", k[1]]), "Format", "");
+
+  const srcName = {upload: "Upload", sample: "Sample", connector: "Connector"};
+  $("recent").innerHTML = data.recent.length ? "<table><tr><th>When</th><th>From</th><th>Result</th><th class='num'>Length</th><th class='num'>New length</th><th class='num'>Saved</th><th class='num'>Took</th><th>Language</th></tr>" +
+    data.recent.map(j => {
+      const saved = j.ok && j.dur ? Math.round((1 - j.out / j.dur) * 100) + "%" : "";
+      return `<tr><td>${new Date(j.t * 1000).toLocaleString("en-US", {month: "short", day: "numeric", hour: "numeric", minute: "2-digit"})}</td><td>${srcName[j.src] || esc(j.src)}</td>` +
+        `<td class="${j.ok ? "ok" : "fail"}">${j.ok ? "Done" : "Failed: " + esc(j.reason || "Other")}</td><td class="num">${j.dur ? clock(j.dur) : ""}</td><td class="num">${j.ok ? clock(j.out) : ""}</td>` +
+        `<td class="num">${saved}</td><td class="num">${j.took != null ? span(j.took) : ""}</td><td>${esc(j.lang || "auto")}</td></tr>`;
+    }).join("") + "</table>" : `<div class="empty">No jobs in this period yet.</div>`;
+}
+
+// A bar chart with one y axis. series: [[key, name, colour]], stacked in that order.
+function bars(el, rows, series) {
+  const box = $(el), W = Math.max(300, box.clientWidth), H = 220, L = 34, R = 6, T = 10, B = 24;
+  const top = Math.max(1, ...rows.map(r => series.reduce((s, k) => s + r[k[0]], 0)));
+  const raw = top / 4, pow = Math.pow(10, Math.floor(Math.log10(raw))), step = Math.max(1, [1, 2, 5, 10].find(m => m * pow >= raw) * pow);
+  const max = step * Math.ceil(top / step), ph = H - T - B, pw = W - L - R, slot = pw / rows.length;
+  const bw = Math.max(2, Math.min(28, slot - 2)), y = v => T + ph - v / max * ph;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${series.map(k => k[1]).join(", ")} per day">`;
+  for (let v = 0; v <= max; v += step)
+    s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${v ? "var(--grid)" : "var(--line)"}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${num(v)}</text>`;
+  const every = Math.ceil(rows.length / Math.max(2, Math.floor(pw / 70)));
+  rows.forEach((r, i) => {
+    const cx = L + slot * i + slot / 2, x = cx - bw / 2;
+    if ((rows.length - 1 - i) % every === 0) s += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${dayLabel(r.date)}</text>`;
+    let acc = 0;
+    const live = series.filter(k => r[k[0]] > 0);
+    live.forEach((k, j) => {
+      const y1 = y(acc + r[k[0]]), y0 = y(acc) - (j ? 2 : 0), h = Math.max(1, y0 - y1), rad = j === live.length - 1 ? Math.min(4, bw / 2, h) : 0;
+      s += `<path d="M${x},${y1 + h}V${y1 + rad}q0,${-rad} ${rad},${-rad}H${x + bw - rad}q${rad},0 ${rad},${rad}V${y1 + h}Z" fill="${k[2]}"/>`;
+      acc += r[k[0]];
+    });
+    s += `<rect data-i="${i}" x="${L + slot * i}" y="${T}" width="${slot}" height="${ph}" fill="transparent"/>`;
+  });
+  box.innerHTML = s + "</svg><div class='tip' hidden></div>";
+  const tip = box.querySelector(".tip"), svg = box.querySelector("svg");
+  svg.onmousemove = e => {
+    const i = e.target.dataset && e.target.dataset.i;
+    if (i == null) { tip.hidden = true; return; }
+    const r = rows[i], sum = series.reduce((a, k) => a + r[k[0]], 0), k = box.clientWidth / W;
+    tip.innerHTML = `<b>${dayLabel(r.date)}</b><br>` + series.map(q => `<i style="background:${q[2]}"></i>${q[1]}: ${num(r[q[0]])}`).join("<br>");
+    tip.hidden = false;
+    const half = tip.offsetWidth / 2, cx = (L + slot * i + slot / 2) * k;
+    tip.style.left = Math.min(box.clientWidth - half, Math.max(half, cx)) + "px";
+    tip.style.top = Math.max(tip.offsetHeight, y(sum) * k - 8) + "px";
+  };
+  svg.onmouseleave = () => { tip.hidden = true; };
+}
+
+let again; addEventListener("resize", () => { clearTimeout(again); again = setTimeout(() => data && !$("dash").hidden && render(), 150); });
+load();
+</script>
+</body></html>

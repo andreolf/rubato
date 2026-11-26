@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import hmac
 import importlib.util
 import ipaddress
 import os
@@ -23,6 +24,7 @@ import threading
 import time
 import uuid
 
+import metrics
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 
@@ -35,6 +37,10 @@ KEEP_SECONDS = 30 * 60
 SITE_URL = (os.environ.get("RUBATO_SITE_URL")
             or ("https://" + os.environ["SPACE_HOST"].split(",")[0].strip() if os.environ.get("SPACE_HOST") else "")).rstrip("/")
 REPO = "https://github.com/andreolf/rubato"
+# The usage page at /admin is off unless this is set to a long secret.
+ADMIN_TOKEN = os.environ.get("RUBATO_ADMIN_TOKEN", "").strip()
+if len(ADMIN_TOKEN) < 16:
+    ADMIN_TOKEN = ""
 WORK = os.path.join(tempfile.gettempdir(), "rubato-web")
 os.makedirs(WORK, exist_ok=True)
 
@@ -108,11 +114,15 @@ except Exception:  # the page and upload API still work without the mcp package
 
 @contextlib.asynccontextmanager
 async def lifespan(_app):
-    if mcp_server is None:
-        yield
-        return
-    async with mcp_server.session_manager.run():
-        yield
+    metrics.start_sync()
+    try:
+        if mcp_server is None:
+            yield
+            return
+        async with mcp_server.session_manager.run():
+            yield
+    finally:
+        metrics.flush()
 
 
 app = FastAPI(title="Rubato", docs_url=None, redoc_url=None, lifespan=lifespan)
@@ -141,6 +151,7 @@ def run_job(job_id: str) -> None:
     job = JOBS[job_id]
     src, folder = job["src"], job["dir"]
     with ONE_AT_A_TIME:
+        began, reason, info = time.time(), None, None
         try:
             if job.get("url"):
                 set_stage(job, "fetching")
@@ -207,9 +218,11 @@ def run_job(job_id: str) -> None:
             set_stage(job, "done")
         except RubatoError as exc:
             job["error"] = str(exc)
+            reason = metrics.failure_reason(str(exc))
             set_stage(job, "error")
         except Exception as exc:  # never leave a job hanging
             job["error"] = f"Something went wrong while processing ({type(exc).__name__})."
+            reason = metrics.failure_reason("", exc)
             set_stage(job, "error")
         finally:
             try:
@@ -217,6 +230,12 @@ def run_job(job_id: str) -> None:
             except OSError:
                 pass
             job["finished"] = time.time()
+            r = job.get("result") or {}
+            metrics.track("job", src=job.get("source"), v=job.get("visitor"), ok=bool(r),
+                          reason=reason, kind=r.get("kind"),
+                          dur=r.get("source_seconds") or (round(info["duration"], 1) if info else None),
+                          out=r.get("output_seconds"), took=round(time.time() - began, 1),
+                          lang=job.get("language"), tx=r.get("transcribed"), music=r.get("music"))
 
 
 def _public_host(host: str) -> bool:
@@ -291,12 +310,14 @@ threading.Thread(target=sweep, daemon=True).start()
 
 
 def start_job(src: str, folder: str, name: str, speeds: dict, language: str | None,
-              url: str | None = None) -> str:
+              url: str | None = None, source: str = "upload", visitor: str | None = None) -> str:
     job_id = os.path.basename(folder)
     with LOCK:
         waiting = sum(1 for j in JOBS.values() if j["stage"] not in ("done", "error"))
         JOBS[job_id] = {"stage": "queued", "src": src, "dir": folder, "name": name,
-                        "speeds": speeds, "language": language, "ahead": waiting, "url": url}
+                        "speeds": speeds, "language": language, "ahead": waiting, "url": url,
+                        "source": source, "visitor": visitor}
+    metrics.track("start", src=source, v=visitor)
     threading.Thread(target=run_job, args=(job_id,), daemon=True).start()
     return job_id
 
@@ -312,6 +333,7 @@ async def create_job(request: Request, file: UploadFile = File(...),
                      silence: float = Form(2.0), language: str = Form("")):
     limit = int(MAX_MB * 1024 * 1024)
     if int(request.headers.get("content-length") or 0) > limit + 1024 * 1024:
+        metrics.track("reject", src="upload", reason="Too large")
         raise HTTPException(413, f"File is larger than {MAX_MB:g} MB.")
     folder = os.path.join(WORK, uuid.uuid4().hex)
     os.makedirs(folder)
@@ -329,16 +351,18 @@ async def create_job(request: Request, file: UploadFile = File(...),
             if size > limit:
                 f.close()
                 shutil.rmtree(folder, ignore_errors=True)
+                metrics.track("reject", src="upload", reason="Too large")
                 raise HTTPException(413, f"File is larger than {MAX_MB:g} MB.")
             f.write(chunk)
     name = os.path.basename(file.filename or "video")[:120]
     job_id = start_job(src, folder, name, {"base": base, "slow": slow, "fast": fast,
-                                           "silence": silence}, clean_language(language))
+                                           "silence": silence}, clean_language(language),
+                       visitor=metrics.visitor(request))
     return {"id": job_id}
 
 
 @app.post("/api/sample")
-async def sample_job():
+async def sample_job(request: Request):
     sample = os.path.join(STATIC, "sample.m4a")
     if not os.path.exists(sample):
         raise HTTPException(404, "No sample on this server.")
@@ -347,7 +371,8 @@ async def sample_job():
     src = os.path.join(folder, "source.m4a")
     shutil.copy(sample, src)
     return {"id": start_job(src, folder, "pricing-talk-sample.m4a",
-                            {"base": 1.2, "slow": 1.0, "fast": 1.5, "silence": 2.0}, "en")}
+                            {"base": 1.2, "slow": 1.0, "fast": 1.5, "silence": 2.0}, "en",
+                            source="sample", visitor=metrics.visitor(request))}
 
 
 @app.get("/api/jobs/{job_id}")
@@ -360,10 +385,13 @@ async def job_status(job_id: str):
 
 
 @app.get("/api/jobs/{job_id}/file")
-async def job_file(job_id: str, download: int = 0):
+async def job_file(request: Request, job_id: str, download: int = 0):
     job = JOBS.get(job_id)
     if not job or not job.get("result"):
         raise HTTPException(404, "This result has expired.")
+    if download and not job.get("downloaded"):
+        job["downloaded"] = True  # count a result once, however often it is fetched
+        metrics.track("download", src=job.get("source"), v=metrics.visitor(request))
     kind = job["result"]["kind"]
     path = os.path.join(job["dir"], "rubato.mp4" if kind == "video" else "rubato.m4a")
     return FileResponse(path, media_type="video/mp4" if kind == "video" else "audio/mp4",
@@ -378,12 +406,14 @@ def page(name: str) -> str:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index():
+async def index(request: Request):
+    metrics.page_view(request, "/")
     return page("index.html")
 
 
 @app.get("/connector", response_class=HTMLResponse)
-async def connector_docs():
+async def connector_docs(request: Request):
+    metrics.page_view(request, "/connector")
     return page("connector.html")
 
 
@@ -393,14 +423,16 @@ async def privacy():
 
 
 @app.get("/llms.txt", response_class=PlainTextResponse)
-async def llms():
+async def llms(request: Request):
+    metrics.track("bot", bot=metrics.bot_name(request.headers.get("user-agent") or "") or "Browser",
+                  path="/llms.txt")
     return page("llms.txt")
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 async def robots():
     sitemap = f"\nSitemap: {SITE_URL}/sitemap.xml" if SITE_URL else ""
-    return "User-agent: *\nAllow: /\nDisallow: /api/" + sitemap + "\n"
+    return "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin" + sitemap + "\n"
 
 
 @app.get("/sitemap.xml")
@@ -434,6 +466,43 @@ async def apple_icon():
 @app.get("/og.svg")
 async def og():
     return FileResponse(os.path.join(STATIC, "og.svg"), media_type="image/svg+xml")
+
+
+# ---------------------------------------------------------------------------
+# Usage page (/admin). Off unless RUBATO_ADMIN_TOKEN is set.
+# ---------------------------------------------------------------------------
+_PRIVATE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"}
+_failed_logins: dict = {}
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page():
+    if not ADMIN_TOKEN:
+        raise HTTPException(404, "Not found")
+    return HTMLResponse(page("admin.html"), headers=_PRIVATE)
+
+
+@app.get("/api/admin/stats")
+async def admin_stats(request: Request, days: int = 30):
+    if not ADMIN_TOKEN:
+        raise HTTPException(404, "Not found")
+    who = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip() or (
+        request.client.host if request.client else "")
+    now = time.time()
+    tries = [t for t in _failed_logins.get(who, []) if now - t < 600]
+    if len(tries) >= 10:
+        raise HTTPException(429, "Too many wrong passwords. Try again in ten minutes.")
+    given = request.headers.get("authorization") or ""
+    given = given[7:] if given.lower().startswith("bearer ") else ""
+    if not hmac.compare_digest(given.encode(), ADMIN_TOKEN.encode()):
+        _failed_logins[who] = tries + [now]
+        raise HTTPException(401, "Wrong password.")
+    _failed_logins.pop(who, None)
+    out = dict(metrics.stats(days))
+    with LOCK:
+        out["live"] = {"working": sum(1 for j in JOBS.values() if j["stage"] not in ("done", "error", "queued")),
+                       "queued": sum(1 for j in JOBS.values() if j["stage"] == "queued")}
+    return JSONResponse(out, headers=_PRIVATE)
 
 
 def _base_url() -> str:
@@ -475,7 +544,7 @@ if mcp_server is not None:
         name = os.path.basename(parts.path)[:120] or "video"
         job_id = start_job(os.path.join(folder, "source" + ext), folder, name,
                            {"base": base, "slow": slow, "fast": fast, "silence": silence},
-                           clean_language(language), url=video_url.strip())
+                           clean_language(language), url=video_url.strip(), source="connector")
         return {"job_id": job_id, "stage": "queued",
                 "next": "Call get_result with this job_id every few seconds until stage is 'done'."}
 
