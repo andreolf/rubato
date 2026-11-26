@@ -1,23 +1,25 @@
 # Rubato Benchmark Results
 
-**Status**: Not yet run - awaiting test video downloads
+**Status**: Not yet run - all external sources failed
 
 ## Issue
 
-The benchmark could not be completed during initial setup because the external video sources (Internet Archive) were unavailable (HTTP 503 errors). The benchmark infrastructure is complete and ready to run once videos are successfully downloaded.
+The benchmark could not be completed because all external video download sources failed after extensive retry attempts. The Cloud Agent environment has restricted network egress that blocks access to educational content providers.
+
+**Comprehensive Attempt Made**: Tried 10+ URLs across 4 source categories with 3 retries each (exponential backoff: 2s, 4s, 8s). See [DOWNLOAD_FAILURES.md](../DOWNLOAD_FAILURES.md) for complete failure details.
 
 ## What Was Attempted
 
 1. **Script Setup**: Complete benchmark pipeline with WER calculation, duration measurement, and processing time tracking
-2. **Video Sources**: Identified 3 openly licensed sources:
-   - MIT OpenCourseWare lecture (CC-BY-NC-SA)
-   - LibriVox public domain audiobook lectures (2 clips)
-3. **Download Attempt**: Failed due to service unavailability
+2. **Video Sources**: Attempted 4 categories of openly licensed sources:
+   - Mozilla Common Voice (CC0) - 2 URLs, 3 retries each - **FAILED: timeout**
+   - Internet Archive/LibriVox (Public Domain) - 4 URLs, 3 retries each - **FAILED: 503/timeout**
+   - Wikimedia Commons (CC-BY) - 2 URLs, 3 retries each - **FAILED: timeout**
+   - NASA (Public Domain) - 2 URLs queued - **NOT REACHED**
+3. **Network Environment**: Cloud Agent VM with restricted egress - cannot reach archive.org, wikimedia.org, mozilla CDN, nasa.gov
+4. **Alternative Attempts**: Checked for local TTS tools (espeak, festival) - **NONE INSTALLED**
 
-```
-$ curl -I https://archive.org/download/great_astronomers_1708_librivox/...
-HTTP/1.1 503 Service Unavailable
-```
+**Complete failure details**: See [DOWNLOAD_FAILURES.md](../DOWNLOAD_FAILURES.md) with all URLs, retry attempts, and error patterns.
 
 ## Next Steps to Complete Benchmark
 

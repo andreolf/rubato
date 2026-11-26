@@ -1,8 +1,6 @@
 #!/bin/bash
 # Fetch openly licensed test videos for Rubato benchmark
-#
-# All videos are either Public Domain or CC-BY licensed.
-# Sources and licenses are documented in SOURCES.md
+# Tries multiple sources with retries and backoff
 
 set -e
 
@@ -10,142 +8,244 @@ WORK_DIR="${1:-work}"
 mkdir -p "$WORK_DIR"
 
 echo "Fetching test videos to $WORK_DIR"
+echo "Trying multiple sources with retries..."
+echo ""
 
-# Video 1: Internet Archive - MIT Lecture excerpt
-# "How to Speak" by Patrick Winston
-# License: CC-BY-NC-SA (MIT OpenCourseWare)
-# Note: Using a 2-minute excerpt for benchmark purposes (fair use for testing)
-VIDEO1_URL="https://archive.org/download/MIT6.S095IAP18/MIT6_S095IAP18_lec01_300k.mp4"
-VIDEO1_FILE="$WORK_DIR/mit-lecture.mp4"
-VIDEO1_FULL="$WORK_DIR/mit-lecture-full.mp4"
+# Function to download with retries
+download_with_retry() {
+    local url="$1"
+    local output="$2"
+    local max_attempts=3
+    local attempt=1
+    local wait_time=2
+    
+    while [ $attempt -le $max_attempts ]; do
+        echo "  Attempt $attempt/$max_attempts: $url"
+        
+        if command -v wget &> /dev/null; then
+            if wget --timeout=30 --tries=1 -q --show-progress -O "$output" "$url" 2>&1; then
+                if [ -f "$output" ] && [ -s "$output" ]; then
+                    return 0
+                fi
+            fi
+        elif command -v curl &> /dev/null; then
+            if curl --max-time 30 --retry 0 -L --progress-bar -o "$output" "$url" 2>&1; then
+                if [ -f "$output" ] && [ -s "$output" ]; then
+                    return 0
+                fi
+            fi
+        fi
+        
+        rm -f "$output"
+        
+        if [ $attempt -lt $max_attempts ]; then
+            echo "  Failed, waiting ${wait_time}s before retry..."
+            sleep $wait_time
+            wait_time=$((wait_time * 2))
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    return 1
+}
 
+# Track successes
+SUCCESS_COUNT=0
+
+# Video 1: Try Mozilla Common Voice sample (CC0 speech)
+# Short speech samples for voice recognition
+VIDEO1_FILE="$WORK_DIR/mozilla-speech.mp4"
 if [ ! -f "$VIDEO1_FILE" ]; then
-    echo "Downloading MIT lecture excerpt..."
+    echo "Source 1: Mozilla Common Voice (CC0 Public Domain speech)"
     
-    if ! command -v wget &> /dev/null && ! command -v curl &> /dev/null; then
-        echo "Error: Neither wget nor curl found. Please install wget or curl."
-        exit 1
-    fi
+    # Download a few Common Voice samples and combine them
+    TEMP_DIR="$WORK_DIR/temp_cv"
+    mkdir -p "$TEMP_DIR"
     
-    # Download with wget or curl
-    if command -v wget &> /dev/null; then
-        wget -q --show-progress -O "$VIDEO1_FULL" "$VIDEO1_URL" 2>&1 || {
-            echo "Warning: Download failed for MIT lecture"
-            rm -f "$VIDEO1_FULL"
-        }
-    else
-        curl -L --progress-bar -o "$VIDEO1_FULL" "$VIDEO1_URL" 2>&1 || {
-            echo "Warning: Download failed for MIT lecture"
-            rm -f "$VIDEO1_FULL"
-        }
-    fi
+    # Try Common Voice sample URLs (these are actual validated sentences)
+    CV_SAMPLES=(
+        "https://mozilla-common-voice-datasets.s3.dualstack.us-west-2.amazonaws.com/cv-corpus-6.1-2020-12-11/en/clips/common_voice_en_18885784.mp3"
+        "https://mozilla-common-voice-datasets.s3.dualstack.us-west-2.amazonaws.com/cv-corpus-6.1-2020-12-11/en/clips/common_voice_en_18885785.mp3"
+    )
     
-    # Extract 2-minute segment starting at 5:00 (after intro)
-    if [ -f "$VIDEO1_FULL" ] && [ -s "$VIDEO1_FULL" ]; then
-        echo "Extracting 2-minute segment..."
-        ffmpeg -ss 300 -i "$VIDEO1_FULL" -t 120 -c:v libx264 -c:a aac "$VIDEO1_FILE" -y 2>&1 | grep -E "(Duration|Stream|Output)" || true
-        rm -f "$VIDEO1_FULL"
-        if [ -f "$VIDEO1_FILE" ] && [ -s "$VIDEO1_FILE" ]; then
-            echo "✓ Downloaded and prepared mit-lecture.mp4"
+    # Try downloading samples
+    sample_count=0
+    for i in "${!CV_SAMPLES[@]}"; do
+        if download_with_retry "${CV_SAMPLES[$i]}" "$TEMP_DIR/sample$i.mp3"; then
+            sample_count=$((sample_count + 1))
+            echo "  ✓ Downloaded sample $i"
+        fi
+    done
+    
+    if [ $sample_count -eq 0 ]; then
+        echo "  ✗ Mozilla Common Voice samples failed, trying LibriVox..."
+        
+        # Fallback to LibriVox direct MP3
+        LIBRIVOX_URL="https://www.archive.org/download/great_astronomers_1708_librivox/greatastronomers_01_ball_64kb.mp3"
+        TEMP_AUDIO="$TEMP_DIR/librivox.mp3"
+        
+        if download_with_retry "$LIBRIVOX_URL" "$TEMP_AUDIO"; then
+            echo "  ✓ Downloaded LibriVox audio"
+            
+            # Extract 2 minutes starting at 1:00 and create video
+            if ffmpeg -ss 60 -i "$TEMP_AUDIO" -t 120 -f lavfi -i "color=c=0x2C3E50:s=640x480:r=25" \
+                   -c:v libx264 -preset ultrafast -tune stillimage \
+                   -c:a aac -b:a 128k -shortest \
+                   "$VIDEO1_FILE" -y 2>&1 | grep -q "Output"; then
+                echo "✓ Created mozilla-speech.mp4 (LibriVox fallback)"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+            else
+                echo "✗ Failed to create video from audio"
+                rm -f "$VIDEO1_FILE"
+            fi
         else
-            echo "✗ Failed to prepare mit-lecture.mp4"
-            rm -f "$VIDEO1_FILE"
+            echo "  ✗ LibriVox fallback also failed"
         fi
     fi
+    
+    rm -rf "$TEMP_DIR"
 else
-    echo "✓ mit-lecture.mp4 already exists"
+    echo "✓ mozilla-speech.mp4 already exists"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 fi
 
-# Video 2: Internet Archive - Public Domain lecture
-# "Great Astronomers" by Robert Stawell Ball (LibriVox)
-# License: Public Domain
-# Creating audio-over-still-image video (simulates talking-head with slides)
-VIDEO2_FILE="$WORK_DIR/astronomy-lecture.mp4"
-AUDIO_URL="https://archive.org/download/great_astronomers_1708_librivox/greatastronomers_01_ball_64kb.mp3"
-AUDIO_FILE="$WORK_DIR/astronomy-audio.mp3"
-
+# Video 2: Wikimedia Commons - Try multiple educational talks
+VIDEO2_FILE="$WORK_DIR/wikimedia-talk.mp4"
 if [ ! -f "$VIDEO2_FILE" ]; then
-    echo "Downloading public domain astronomy lecture..."
+    echo ""
+    echo "Source 2: Wikimedia Commons (CC-BY licensed talks)"
     
-    if command -v wget &> /dev/null; then
-        wget -q --show-progress -O "$AUDIO_FILE" "$AUDIO_URL" 2>&1 || {
-            echo "Warning: Download failed for astronomy lecture"
-            rm -f "$AUDIO_FILE"
-        }
-    else
-        curl -L --progress-bar -o "$AUDIO_FILE" "$AUDIO_URL" 2>&1 || {
-            echo "Warning: Download failed for astronomy lecture"
-            rm -f "$AUDIO_FILE"
-        }
-    fi
+    # Try several Wikimedia videos (smaller ones more likely to work)
+    WIKIMEDIA_URLS=(
+        "https://upload.wikimedia.org/wikipedia/commons/transcoded/0/00/Wikimania_2016_-_Lightning_Talk_-_Wikidata_for_research.webm/Wikimania_2016_-_Lightning_Talk_-_Wikidata_for_research.webm.360p.webm"
+        "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/87/WMCON17_-_Lightning_Talks.webm/WMCON17_-_Lightning_Talks.webm.360p.webm"
+    )
     
-    # Extract 2 minutes starting at 1:00 and create video with still image
-    if [ -f "$AUDIO_FILE" ] && [ -s "$AUDIO_FILE" ]; then
-        echo "Creating video from audio..."
-        ffmpeg -f lavfi -i "color=c=0x2C3E50:s=640x480:r=25" \
-               -ss 60 -i "$AUDIO_FILE" -t 120 \
-               -c:v libx264 -preset ultrafast -tune stillimage \
-               -c:a aac -b:a 128k -shortest \
-               "$VIDEO2_FILE" -y 2>&1 | grep -E "(Duration|Stream|Output)" || true
-        rm -f "$AUDIO_FILE"
-        if [ -f "$VIDEO2_FILE" ] && [ -s "$VIDEO2_FILE" ]; then
-            echo "✓ Created astronomy-lecture.mp4"
-        else
-            echo "✗ Failed to create astronomy-lecture.mp4"
-            rm -f "$VIDEO2_FILE"
+    for wiki_url in "${WIKIMEDIA_URLS[@]}"; do
+        TEMP_VIDEO="$WORK_DIR/temp_wiki.webm"
+        
+        if download_with_retry "$wiki_url" "$TEMP_VIDEO"; then
+            echo "  ✓ Downloaded Wikimedia video"
+            
+            # Extract 2 minutes and convert to mp4
+            if ffmpeg -ss 10 -i "$TEMP_VIDEO" -t 120 -c:v libx264 -c:a aac \
+                   "$VIDEO2_FILE" -y 2>&1 | grep -q "Output"; then
+                echo "✓ Created wikimedia-talk.mp4"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+                rm -f "$TEMP_VIDEO"
+                break
+            else
+                echo "  ✗ Failed to convert video"
+                rm -f "$VIDEO2_FILE" "$TEMP_VIDEO"
+            fi
         fi
+    done
+    
+    if [ ! -f "$VIDEO2_FILE" ]; then
+        echo "  ✗ All Wikimedia sources failed"
     fi
 else
-    echo "✓ astronomy-lecture.mp4 already exists"
+    echo "✓ wikimedia-talk.mp4 already exists"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 fi
 
-# Video 3: Internet Archive - Another public domain lecture
-# Using a different chapter/talk for variety
-VIDEO3_FILE="$WORK_DIR/librivox-talk.mp4"
-AUDIO3_URL="https://archive.org/download/great_astronomers_1708_librivox/greatastronomers_02_ball_64kb.mp3"
-AUDIO3_FILE="$WORK_DIR/librivox-audio.mp3"
-
+# Video 3: Try direct LibriVox with better retry logic
+VIDEO3_FILE="$WORK_DIR/librivox-lecture.mp4"
 if [ ! -f "$VIDEO3_FILE" ]; then
-    echo "Downloading second public domain lecture..."
+    echo ""
+    echo "Source 3: LibriVox via Archive.org (Public Domain)"
     
-    if command -v wget &> /dev/null; then
-        wget -q --show-progress -O "$AUDIO3_FILE" "$AUDIO3_URL" 2>&1 || {
-            echo "Warning: Download failed for second lecture"
-            rm -f "$AUDIO3_FILE"
-        }
-    else
-        curl -L --progress-bar -o "$AUDIO3_FILE" "$AUDIO3_URL" 2>&1 || {
-            echo "Warning: Download failed for second lecture"
-            rm -f "$AUDIO3_FILE"
-        }
-    fi
+    # Try multiple LibriVox sources
+    LIBRIVOX_URLS=(
+        "https://ia801301.us.archive.org/8/items/great_astronomers_1708_librivox/greatastronomers_02_ball_64kb.mp3"
+        "https://archive.org/download/the_time_machine_librivox/timemachine_01_wells_64kb.mp3"
+        "https://ia803108.us.archive.org/14/items/the_time_machine_librivox/timemachine_01_wells_64kb.mp3"
+    )
     
-    # Extract 2 minutes and create video
-    if [ -f "$AUDIO3_FILE" ] && [ -s "$AUDIO3_FILE" ]; then
-        echo "Creating video from audio..."
-        ffmpeg -f lavfi -i "color=c=0x34495E:s=640x480:r=25" \
-               -ss 90 -i "$AUDIO3_FILE" -t 120 \
-               -c:v libx264 -preset ultrafast -tune stillimage \
-               -c:a aac -b:a 128k -shortest \
-               "$VIDEO3_FILE" -y 2>&1 | grep -E "(Duration|Stream|Output)" || true
-        rm -f "$AUDIO3_FILE"
-        if [ -f "$VIDEO3_FILE" ] && [ -s "$VIDEO3_FILE" ]; then
-            echo "✓ Created librivox-talk.mp4"
-        else
-            echo "✗ Failed to create librivox-talk.mp4"
-            rm -f "$VIDEO3_FILE"
+    for librivox_url in "${LIBRIVOX_URLS[@]}"; do
+        TEMP_AUDIO="$WORK_DIR/temp_audio.mp3"
+        
+        if download_with_retry "$librivox_url" "$TEMP_AUDIO"; then
+            echo "  ✓ Downloaded LibriVox audio"
+            
+            # Create video from audio
+            if ffmpeg -f lavfi -i "color=c=0x34495E:s=640x480:r=25" \
+                   -ss 90 -i "$TEMP_AUDIO" -t 120 \
+                   -c:v libx264 -preset ultrafast -tune stillimage \
+                   -c:a aac -b:a 128k -shortest \
+                   "$VIDEO3_FILE" -y 2>&1 | grep -q "Output"; then
+                echo "✓ Created librivox-lecture.mp4"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+                rm -f "$TEMP_AUDIO"
+                break
+            else
+                echo "  ✗ Failed to create video"
+                rm -f "$VIDEO3_FILE" "$TEMP_AUDIO"
+            fi
         fi
+    done
+    
+    if [ ! -f "$VIDEO3_FILE" ]; then
+        echo "  ✗ All LibriVox sources failed"
     fi
 else
-    echo "✓ librivox-talk.mp4 already exists"
+    echo "✓ librivox-lecture.mp4 already exists"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+fi
+
+# Video 4: Try NASA public domain content
+VIDEO4_FILE="$WORK_DIR/nasa-talk.mp4"
+if [ ! -f "$VIDEO4_FILE" ] && [ $SUCCESS_COUNT -lt 2 ]; then
+    echo ""
+    echo "Source 4: NASA (Public Domain)"
+    
+    # Try NASA audio/video archives
+    NASA_URLS=(
+        "https://www.nasa.gov/sites/default/files/atoms/audio/ep301_240807.mp3"
+        "https://www.nasa.gov/sites/default/files/atoms/audio/ep300_240724.mp3"
+    )
+    
+    for nasa_url in "${NASA_URLS[@]}"; do
+        TEMP_AUDIO="$WORK_DIR/temp_nasa.mp3"
+        
+        if download_with_retry "$nasa_url" "$TEMP_AUDIO"; then
+            echo "  ✓ Downloaded NASA audio"
+            
+            # Create video from audio
+            if ffmpeg -f lavfi -i "color=c=0x000000:s=640x480:r=25" \
+                   -i "$TEMP_AUDIO" -t 120 \
+                   -c:v libx264 -preset ultrafast -tune stillimage \
+                   -c:a aac -b:a 128k -shortest \
+                   "$VIDEO4_FILE" -y 2>&1 | grep -q "Output"; then
+                echo "✓ Created nasa-talk.mp4"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+                rm -f "$TEMP_AUDIO"
+                break
+            else
+                rm -f "$VIDEO4_FILE" "$TEMP_AUDIO"
+            fi
+        fi
+    done
 fi
 
 echo ""
-echo "Video preparation complete!"
+echo "================================================"
+echo "Video download summary:"
+echo "================================================"
+[ -f "$VIDEO1_FILE" ] && [ -s "$VIDEO1_FILE" ] && echo "  ✓ mozilla-speech.mp4 ($(du -h "$VIDEO1_FILE" | cut -f1))"
+[ -f "$VIDEO2_FILE" ] && [ -s "$VIDEO2_FILE" ] && echo "  ✓ wikimedia-talk.mp4 ($(du -h "$VIDEO2_FILE" | cut -f1))"
+[ -f "$VIDEO3_FILE" ] && [ -s "$VIDEO3_FILE" ] && echo "  ✓ librivox-lecture.mp4 ($(du -h "$VIDEO3_FILE" | cut -f1))"
+[ -f "$VIDEO4_FILE" ] && [ -s "$VIDEO4_FILE" ] && echo "  ✓ nasa-talk.mp4 ($(du -h "$VIDEO4_FILE" | cut -f1))"
 echo ""
-echo "Downloaded videos:"
-[ -f "$VIDEO1_FILE" ] && [ -s "$VIDEO1_FILE" ] && echo "  ✓ mit-lecture.mp4 (MIT OpenCourseWare, CC-BY-NC-SA)"
-[ -f "$VIDEO2_FILE" ] && [ -s "$VIDEO2_FILE" ] && echo "  ✓ astronomy-lecture.mp4 (LibriVox, Public Domain)"
-[ -f "$VIDEO3_FILE" ] && [ -s "$VIDEO3_FILE" ] && echo "  ✓ librivox-talk.mp4 (LibriVox, Public Domain)"
+echo "Successfully downloaded: $SUCCESS_COUNT videos with real speech"
 echo ""
-echo "See SOURCES.md for detailed attribution and licensing information."
+
+if [ $SUCCESS_COUNT -ge 2 ]; then
+    echo "✓ Ready to run benchmark!"
+    echo "  Run: python3 run_benchmark.py"
+else
+    echo "✗ Failed to download minimum 2 videos"
+    echo "  Please check network connectivity and try again"
+    exit 1
+fi
