@@ -1,131 +1,145 @@
 # Rubato Benchmark Results
 
-> **Note**: This is a sample results file showing the expected format. 
-> To generate actual benchmark results, run `./fetch_videos.sh` followed by `python3 run_benchmark.py` with real talking-head videos.
-> The synthetic test video provided by default does not contain speech and will produce empty transcripts.
+**Status**: Not yet run - awaiting test video downloads
 
-## Hardware
+## Issue
 
-- **CPU**: To be recorded when benchmark runs
-- **RAM**: To be recorded  
+The benchmark could not be completed during initial setup because the external video sources (Internet Archive) were unavailable (HTTP 503 errors). The benchmark infrastructure is complete and ready to run once videos are successfully downloaded.
+
+## What Was Attempted
+
+1. **Script Setup**: Complete benchmark pipeline with WER calculation, duration measurement, and processing time tracking
+2. **Video Sources**: Identified 3 openly licensed sources:
+   - MIT OpenCourseWare lecture (CC-BY-NC-SA)
+   - LibriVox public domain audiobook lectures (2 clips)
+3. **Download Attempt**: Failed due to service unavailability
+
+```
+$ curl -I https://archive.org/download/great_astronomers_1708_librivox/...
+HTTP/1.1 503 Service Unavailable
+```
+
+## Next Steps to Complete Benchmark
+
+To generate actual results:
+
+1. **Wait for service availability**: Retry when Internet Archive is accessible
+2. **Or use alternative sources**: Replace fetch_videos.sh URLs with accessible alternatives
+3. **Or provide local videos**: Place 2-3 talking-head MP4 files in `work/` directory and update test_videos list in run_benchmark.py
+
+```bash
+# Manual video placement
+cp your-lecture-1.mp4 work/mit-lecture.mp4
+cp your-lecture-2.mp4 work/astronomy-lecture.mp4
+cp your-lecture-3.mp4 work/librivox-talk.mp4
+
+# Then run benchmark
+python3 run_benchmark.py
+```
+
+## Expected Results Format
+
+Once the benchmark runs with real speech videos, results will appear here:
+
+### Hardware
+
+- **CPU**: (To be recorded when benchmark runs)
+- **RAM**: (To be recorded)
 - **Storage**: SSD
 - **OS**: Linux 6.12.113+
+
+### Results Summary
+
+| Video | Preset | Duration Cut % | WER | Effective Speed | Processing (s/min) |
+|-------|--------|----------------|-----|-----------------|-------------------|
+| (awaiting run) | - | - | - | - | - |
+
+### Detailed Results by Video
+
+(Results will be populated here after successful run)
 
 ## Methodology
 
 ### Test Videos
 
-Videos used should be:
-- Openly licensed (CC-BY or Public Domain)
-- Talking-head format (lectures, presentations, tutorials)
-- 1-3 minutes in length for quick benchmarking
-- Contain clear speech for transcription
+Videos must be:
+- Openly licensed (CC-BY, CC-BY-SA, CC-BY-NC-SA, or Public Domain)
+- Talking-head format with clear speech
+- 2-3 minutes in length
+- Properly attributed (see SOURCES.md)
 
-### Transcription
+### Metrics
 
-- **Engine**: faster-whisper
-- **Model**: `base` (pinned)
-- **Configuration**: Default settings
+1. **Duration Cut %**: `(original_duration - output_duration) / original_duration * 100`
+2. **WER (Word Error Rate)**: Levenshtein distance on normalized transcripts (original vs processed)
+   - Both transcribed with faster-whisper `base` model
+   - Transcripts normalized: lowercase, punctuation removed
+   - `WER = edit_distance / reference_word_count`
+3. **Processing Time**: Total processing seconds / input video minutes
 
-### WER Calculation
+### Speed Presets
 
-Word Error Rate computed as:
-```
-WER = (Substitutions + Insertions + Deletions) / Total Reference Words
-```
+| Preset | Slow | Base | Fast | Silence | Use Case |
+|--------|------|------|------|---------|----------|
+| default | 1.0 | 1.2 | 1.5 | 2.0 | General purpose, balanced |
+| conservative | 1.0 | 1.1 | 1.3 | 1.5 | Minimal speedup, maximum safety |
+| aggressive | 1.0 | 1.3 | 1.75 | 2.5 | Maximum time savings |
 
-Using Levenshtein distance on normalized transcripts (lowercase, punctuation removed).
+### Reproducibility
 
-### Speed Presets Tested
-
-| Preset | Slow | Base | Fast | Silence |
-|--------|------|------|------|---------|
-| default | 1.0 | 1.2 | 1.5 | 2.0 |
-| conservative | 1.0 | 1.1 | 1.3 | 1.5 |
-| aggressive | 1.0 | 1.3 | 1.75 | 2.5 |
-
-## Results Summary
-
-### Expected Metrics
-
-**Duration Cut %**: Typically 15-25% for default preset on mixed content (some key parts, some filler, some pauses)
-
-**WER**: Expected to be very low (< 0.05) since speed changes preserve all audio, just at different rates. Higher WER would indicate audio quality issues.
-
-**Processing Time**: Varies by hardware, typically 1-3 seconds per minute of input video on modern hardware.
-
-## Sample Results Format
-
-| Video | Preset | Duration Cut % | WER | Effective Speed | Processing (s/min) |
-|-------|--------|----------------|-----|-----------------|-------------------|
-| lecture-1 | default | 18.5% | 0.0234 | 1.23x | 2.1 |
-| lecture-1 | conservative | 12.1% | 0.0189 | 1.14x | 2.0 |
-| lecture-1 | aggressive | 24.3% | 0.0298 | 1.32x | 2.3 |
-
-## Running Your Own Benchmark
-
-1. Replace `work/sample1.mp4` with a real talking-head video:
-   ```bash
-   cp your-lecture.mp4 bench/work/sample1.mp4
-   ```
-
-2. Update metadata in `run_benchmark.py`:
-   ```python
-   test_videos = [
-       {
-           "name": "your-video",
-           "filename": "sample1.mp4",
-           "source": "Your source here",
-           "license": "CC-BY / Public Domain / etc."
-       }
-   ]
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install faster-whisper imageio-ffmpeg
-   ```
-
-4. Run benchmark:
-   ```bash
-   cd bench
-   python3 run_benchmark.py
-   ```
+- **Whisper Model**: `base` (faster-whisper) - pinned
+- **Rubato Version**: Current repository HEAD
+- **Deterministic**: Yes (same input + settings = same output)
+- **Raw Logs**: Saved in `work/` directory (not committed - see .gitignore)
+- **Results JSON**: Committed to track evolution over time
 
 ## Limitations
 
-- **Synthetic Test Video**: Default video has no speech, so WER calculation is not meaningful
-- **Short Duration**: Benchmark uses short clips; longer videos may show different characteristics
-- **Hardware Dependent**: Processing times are specific to the hardware used
-- **Whisper Variability**: Small variations in WER expected between runs due to Whisper model behavior
+- **No Results Yet**: Benchmark has not completed a successful run
+- **Hardware Dependent**: Processing times vary significantly by CPU
+- **Whisper Variability**: Small WER variations expected between runs (~0.001-0.01)
+- **Short Videos**: 2-minute clips are fast to benchmark but may not represent hour-long content
+- **Network Dependency**: Requires external downloads unless videos are provided locally
 
-## Extending the Benchmark
+## Running the Benchmark Yourself
 
-To add more test videos:
-1. Download/create openly licensed videos
-2. Add to `test_videos` list in `run_benchmark.py`
-3. Place files in `work/` directory
-4. Document source and license
+If you have access to suitable test videos:
 
-To add more presets:
-1. Add to `presets` list in `run_benchmark.py`
-2. Specify slow/base/fast/silence speeds
+```bash
+cd bench
+
+# Option 1: Try the download script (may fail if archive.org is down)
+./fetch_videos.sh
+
+# Option 2: Provide your own videos
+mkdir -p work
+cp your-talking-head-video-1.mp4 work/mit-lecture.mp4
+cp your-talking-head-video-2.mp4 work/astronomy-lecture.mp4
+cp your-talking-head-video-3.mp4 work/librivox-talk.mp4
+
+# Install dependencies
+pip install faster-whisper imageio-ffmpeg
+
+# Run benchmark
+python3 run_benchmark.py
+
+# Results will be written to this file
+```
 
 ## Comparison with Flat Speed
 
-For typical talking-head content:
-- **Flat 1.2x**: Uniform speedup, no adaptation to content
-- **Rubato default**: Variable speed (1.0-2.0x), adapts to content
-  - Similar time savings to flat 1.2x
-  - Better comprehension for key parts (slower)
-  - Faster through filler and pauses
+**Hypothesis** (to be tested): 
 
-**Hypothesis**: Rubato achieves similar or better time savings while maintaining higher comprehension due to content-aware slowdown on important passages.
+For typical talking-head content, Rubato's variable-speed approach should achieve similar time savings to a flat 1.2x speedup while maintaining or improving comprehension by:
+- Keeping key content (takeaways, lists, numbers) at 1.0x
+- Speeding through filler and transitions at 1.5x
+- Racing through pauses at 2.0x
 
-## Future Work
+This would result in similar WER (since no content is cut) but hypothetically better viewer comprehension (not measured by WER alone).
 
-- [ ] Test with multiple video types (lectures, tutorials, meetings)
-- [ ] Measure comprehension/retention (would require human testing)
-- [ ] Benchmark on different hardware configurations
-- [ ] Test with longer videos (30-60 minutes)
-- [ ] Compare with other variable-speed tools
+**Testing Required**: This hypothesis needs real benchmark data to validate or refute.
+
+---
+
+**Last Updated**: 2024-11-26  
+**Status**: Infrastructure complete, awaiting successful video downloads

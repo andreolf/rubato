@@ -360,10 +360,22 @@ def main():
     # Define test videos (will be downloaded by fetch_videos.sh)
     test_videos = [
         {
-            "name": "sample1",
-            "filename": "sample1.mp4",
-            "source": "Downloaded via fetch_videos.sh",
-            "license": "CC-BY or Public Domain"
+            "name": "mit-lecture",
+            "filename": "mit-lecture.mp4",
+            "source": "MIT OpenCourseWare 'How to Speak' by Patrick Winston",
+            "license": "CC-BY-NC-SA 4.0"
+        },
+        {
+            "name": "astronomy-lecture",
+            "filename": "astronomy-lecture.mp4",
+            "source": "LibriVox 'Great Astronomers' by Robert Stawell Ball",
+            "license": "Public Domain"
+        },
+        {
+            "name": "librivox-talk",
+            "filename": "librivox-talk.mp4",
+            "source": "LibriVox 'Great Astronomers' Ch. 2 by Robert Stawell Ball",
+            "license": "Public Domain"
         }
     ]
     

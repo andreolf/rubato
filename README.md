@@ -154,45 +154,43 @@ Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--flat 1.25` (o
 
 ## Benchmarks
 
-Rubato includes a reproducible benchmark suite measuring performance and accuracy preservation across different speed presets.
+Rubato includes a reproducible benchmark suite to measure:
+- **Duration Cut %**: Runtime reduction (output vs input duration)  
+- **WER (Word Error Rate)**: Transcription accuracy preservation
+- **Processing Time**: Seconds per minute of video
 
-### Quick Results
-
-| Metric | Typical Range | Notes |
-|--------|---------------|-------|
-| **Duration Cut** | 15-25% | For default preset (slow=1.0, base=1.2, fast=1.5, silence=2.0) |
-| **WER (Word Error Rate)** | < 0.05 | Transcription accuracy preserved; speed changes don't cut content |
-| **Processing Time** | 1-3 s/min | Depends on hardware; measured per minute of input video |
+**Current Status**: Benchmark infrastructure is complete but awaiting successful test video downloads (external sources temporarily unavailable). See [`bench/results/benchmark_results.md`](bench/results/benchmark_results.md) for details.
 
 ### Methodology
 
-- **Test Videos**: Openly licensed (CC-BY/Public Domain) talking-head videos
+- **Test Videos**: Openly licensed (CC-BY/Public Domain) talking-head lectures
 - **Transcription**: faster-whisper `base` model, pinned for reproducibility
 - **WER Calculation**: Levenshtein distance on normalized transcripts (original vs processed)
-- **Multiple Presets**: default, conservative, aggressive speed configurations
+- **Multiple Presets**: default (1.0/1.2/1.5/2.0), conservative (1.0/1.1/1.3/1.5), aggressive (1.0/1.3/1.75/2.5)
 
 ### Running the Benchmark
 
 ```bash
 cd bench
 
-# 1. Fetch test videos (or add your own)
+# Option 1: Try fetching test videos (requires Internet Archive access)
 ./fetch_videos.sh
 
-# 2. Install dependencies
+# Option 2: Provide your own talking-head videos
+mkdir -p work
+cp your-video.mp4 work/mit-lecture.mp4
+# (see bench/README.md for details)
+
+# Install dependencies
 pip install faster-whisper imageio-ffmpeg
 
-# 3. Run benchmark
+# Run benchmark
 python3 run_benchmark.py
-
-# Results saved to results/benchmark_results.json and results/benchmark_results.md
 ```
 
-For detailed methodology, sources, and results, see [`bench/README.md`](bench/README.md) and [`bench/SOURCES.md`](bench/SOURCES.md).
+Results are saved to `bench/results/benchmark_results.json` and `bench/results/benchmark_results.md`.
 
-**Hardware**: Results are hardware-dependent. The benchmark records processing time per minute of video on the system used.
-
-**Note**: The included synthetic test video has no speech. For meaningful WER measurements, replace `work/sample1.mp4` with real talking-head content (see `bench/SOURCES.md` for suggested sources).
+For complete documentation, see [`bench/README.md`](bench/README.md) and [`bench/SOURCES.md`](bench/SOURCES.md) for video sources and licensing.
 
 ## FAQ
 
