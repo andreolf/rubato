@@ -1,0 +1,15 @@
+# stdout
+source   2:58  ->  output 2:17   (effective 1.296x; flat 1.2x would give 2:28)
+speed    |▃▁▁▁▁▁▂▄▅▁▁▂▁▁▁▁▁▃▅▂▁▁▂▁▁▃▆▆▁▂▃▄▅▁▁▁▁▄▄▆▃▁▁▁▄▁▄▄▇▁▁▁▃▁▁▁▁▂▁▃▁▁▁▁|   low bar = 1.2x, tall bar = 2x
+share    1.2x 73%  1.45x 1%  1.5x 16%  2x 10%
+segments 51
+
+# stderr
+rubato: analysing audio…
+rubato: analysing picture…
+rubato: wrote work/wikimania-bot-talk.default.plan.json
+
+rubato: audio 1/2
+rubato: audio 2/2
+rubato: encoding…
+rubato: wrote work/wikimania-bot-talk.default.mp4

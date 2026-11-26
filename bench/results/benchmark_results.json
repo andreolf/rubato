@@ -1,0 +1,278 @@
+{
+  "rubato_commit": "b863ed2827f3278fc3851d9012440a2f0f5924b4",
+  "rubato_model": "base",
+  "judge_model": "small.en",
+  "judge_options": {
+    "language": "en",
+    "beam_size": 5,
+    "batch_size": 8,
+    "temperature": 0.0,
+    "no_repeat_ngram_size": 6
+  },
+  "hardware": {
+    "os": "Linux-6.12.113+-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "cpu": "Intel(R) Xeon(R) Processor",
+    "cpu_count": 8,
+    "ram_gb": 15.6,
+    "faster_whisper": "1.2.1",
+    "ctranslate2": "4.8.4",
+    "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "rubato_commit": "b863ed2827f3278fc3851d9012440a2f0f5924b4"
+  },
+  "test_videos": [
+    {
+      "name": "nasa-interview",
+      "filename": "nasa-interview.mp4",
+      "source": "NASA SVS 14327, Lesley Ott 2023 Earth Day interview (first 300 s), via Wikimedia Commons",
+      "license": "Public Domain (NASA)"
+    },
+    {
+      "name": "wikimania-privacy-talk",
+      "filename": "wikimania-privacy-talk.mp4",
+      "source": "Research and Privacy on Wikipedia, Wikimania 2025 lightning talk, Eli Asikin-Garmager, via Wikimedia Commons",
+      "license": "CC0 1.0",
+      "captions": "references/wikimania-privacy-talk.srt"
+    },
+    {
+      "name": "wikimania-bot-talk",
+      "filename": "wikimania-bot-talk.mp4",
+      "source": "Wikimania BoT candidate lightning talk, Fjmustak (Wikimedia Foundation), via Wikimedia Commons",
+      "license": "CC BY 4.0"
+    }
+  ],
+  "presets": [
+    {
+      "name": "default",
+      "slow": 1.0,
+      "base": 1.2,
+      "fast": 1.5,
+      "silence": 2.0
+    },
+    {
+      "name": "conservative",
+      "slow": 1.0,
+      "base": 1.1,
+      "fast": 1.3,
+      "silence": 1.5
+    },
+    {
+      "name": "aggressive",
+      "slow": 1.0,
+      "base": 1.3,
+      "fast": 1.75,
+      "silence": 2.5
+    }
+  ],
+  "results": [
+    {
+      "video": "nasa-interview",
+      "source": "NASA SVS 14327, Lesley Ott 2023 Earth Day interview (first 300 s), via Wikimedia Commons",
+      "license": "Public Domain (NASA)",
+      "original_duration": 300.02,
+      "original_words": 694,
+      "rubato_transcription_time_sec": 6.83,
+      "rubato_transcription_time_per_min": 1.37,
+      "presets": [
+        {
+          "preset": "default",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.2,
+            "fast": 1.5,
+            "silence": 2.0
+          },
+          "original_duration_sec": 300.02,
+          "output_duration_sec": 220.07,
+          "duration_cut_pct": 26.65,
+          "effective_speed": 1.363,
+          "wer": 0.0115,
+          "wer_edit_distance": 8,
+          "wer_ref_words": 694,
+          "wer_hyp_words": 697,
+          "processing_time_sec": 42.52,
+          "processing_time_per_min": 8.5
+        },
+        {
+          "preset": "conservative",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.1,
+            "fast": 1.3,
+            "silence": 1.5
+          },
+          "original_duration_sec": 300.02,
+          "output_duration_sec": 249.59,
+          "duration_cut_pct": 16.81,
+          "effective_speed": 1.202,
+          "wer": 0.0202,
+          "wer_edit_distance": 14,
+          "wer_ref_words": 694,
+          "wer_hyp_words": 694,
+          "processing_time_sec": 46.47,
+          "processing_time_per_min": 9.29
+        },
+        {
+          "preset": "aggressive",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.3,
+            "fast": 1.75,
+            "silence": 2.5
+          },
+          "original_duration_sec": 300.02,
+          "output_duration_sec": 199.49,
+          "duration_cut_pct": 33.51,
+          "effective_speed": 1.504,
+          "wer": 0.0086,
+          "wer_edit_distance": 6,
+          "wer_ref_words": 694,
+          "wer_hyp_words": 697,
+          "processing_time_sec": 41.11,
+          "processing_time_per_min": 8.22
+        }
+      ]
+    },
+    {
+      "video": "wikimania-privacy-talk",
+      "source": "Research and Privacy on Wikipedia, Wikimania 2025 lightning talk, Eli Asikin-Garmager, via Wikimedia Commons",
+      "license": "CC0 1.0",
+      "original_duration": 283.46,
+      "original_words": 627,
+      "rubato_transcription_time_sec": 8.25,
+      "rubato_transcription_time_per_min": 1.75,
+      "presets": [
+        {
+          "preset": "default",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.2,
+            "fast": 1.5,
+            "silence": 2.0
+          },
+          "original_duration_sec": 283.46,
+          "output_duration_sec": 219.12,
+          "duration_cut_pct": 22.7,
+          "effective_speed": 1.294,
+          "wer": 0.0048,
+          "wer_edit_distance": 3,
+          "wer_ref_words": 627,
+          "wer_hyp_words": 626,
+          "processing_time_sec": 18.99,
+          "processing_time_per_min": 4.02,
+          "caption_wer": 0.0192
+        },
+        {
+          "preset": "conservative",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.1,
+            "fast": 1.3,
+            "silence": 1.5
+          },
+          "original_duration_sec": 283.46,
+          "output_duration_sec": 244.85,
+          "duration_cut_pct": 13.62,
+          "effective_speed": 1.158,
+          "wer": 0.0048,
+          "wer_edit_distance": 3,
+          "wer_ref_words": 627,
+          "wer_hyp_words": 626,
+          "processing_time_sec": 18.82,
+          "processing_time_per_min": 3.98,
+          "caption_wer": 0.0144
+        },
+        {
+          "preset": "aggressive",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.3,
+            "fast": 1.75,
+            "silence": 2.5
+          },
+          "original_duration_sec": 283.46,
+          "output_duration_sec": 200.08,
+          "duration_cut_pct": 29.41,
+          "effective_speed": 1.417,
+          "wer": 0.008,
+          "wer_edit_distance": 5,
+          "wer_ref_words": 627,
+          "wer_hyp_words": 626,
+          "processing_time_sec": 16.82,
+          "processing_time_per_min": 3.56,
+          "caption_wer": 0.0128
+        }
+      ],
+      "caption_words": 624,
+      "original_caption_wer": 0.0144
+    },
+    {
+      "video": "wikimania-bot-talk",
+      "source": "Wikimania BoT candidate lightning talk, Fjmustak (Wikimedia Foundation), via Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "original_duration": 178.17,
+      "original_words": 343,
+      "rubato_transcription_time_sec": 4.44,
+      "rubato_transcription_time_per_min": 1.49,
+      "presets": [
+        {
+          "preset": "default",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.2,
+            "fast": 1.5,
+            "silence": 2.0
+          },
+          "original_duration_sec": 178.17,
+          "output_duration_sec": 137.44,
+          "duration_cut_pct": 22.86,
+          "effective_speed": 1.296,
+          "wer": 0.0321,
+          "wer_edit_distance": 11,
+          "wer_ref_words": 343,
+          "wer_hyp_words": 337,
+          "processing_time_sec": 7.58,
+          "processing_time_per_min": 2.55
+        },
+        {
+          "preset": "conservative",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.1,
+            "fast": 1.3,
+            "silence": 1.5
+          },
+          "original_duration_sec": 178.17,
+          "output_duration_sec": 153.94,
+          "duration_cut_pct": 13.6,
+          "effective_speed": 1.157,
+          "wer": 0.0292,
+          "wer_edit_distance": 10,
+          "wer_ref_words": 343,
+          "wer_hyp_words": 338,
+          "processing_time_sec": 8.2,
+          "processing_time_per_min": 2.76
+        },
+        {
+          "preset": "aggressive",
+          "settings": {
+            "slow": 1.0,
+            "base": 1.3,
+            "fast": 1.75,
+            "silence": 2.5
+          },
+          "original_duration_sec": 178.17,
+          "output_duration_sec": 124.89,
+          "duration_cut_pct": 29.9,
+          "effective_speed": 1.427,
+          "wer": 0.0321,
+          "wer_edit_distance": 11,
+          "wer_ref_words": 343,
+          "wer_hyp_words": 336,
+          "processing_time_sec": 7.26,
+          "processing_time_per_min": 2.44
+        }
+      ]
+    }
+  ]
+}

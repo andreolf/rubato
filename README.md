@@ -152,6 +152,33 @@ Your own overrides go in a marks file, passed with `--marks marks.json`:
 
 Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--flat 1.25` (one speed throughout), `--max 1.3` (a ceiling), `--crf 18 --preset medium` (video quality), `--min-segment 2` (shortest stretch at its own speed), `--language it`, `--model small`, `--cues cues.json` (your own trigger phrases, or another language), `--plan-only`. The steps also exist separately as `transcribe`, `analyze`, `plan` and `render`. `plan.json` is a plain list of `{start, end, speed}` segments and can be edited by hand. `remap-srt` retimes subtitles to match. Audio files work too.
 
+## Benchmarks
+
+Measured on three real, openly licensed recordings (a NASA interview and two Wikimania talks, 3-5 minutes each), on an 8-vCPU Intel(R) Xeon(R) Processor (KVM), 15.6 GB RAM, no GPU.
+
+| Clip | Preset | Duration cut | WER vs original | Processing (s per min of video) |
+|------|--------|--------------|-----------------|---------------------------------|
+| nasa-interview (300 s) | default | 26.65% | 1.15% | 8.50 |
+| nasa-interview (300 s) | conservative | 16.81% | 2.02% | 9.29 |
+| nasa-interview (300 s) | aggressive | 33.51% | 0.86% | 8.22 |
+| wikimania-privacy-talk (283 s) | default | 22.70% | 0.48% | 4.02 |
+| wikimania-privacy-talk (283 s) | conservative | 13.62% | 0.48% | 3.98 |
+| wikimania-privacy-talk (283 s) | aggressive | 29.41% | 0.80% | 3.56 |
+| wikimania-bot-talk (178 s) | default | 22.86% | 3.21% | 2.55 |
+| wikimania-bot-talk (178 s) | conservative | 13.60% | 2.92% | 2.76 |
+| wikimania-bot-talk (178 s) | aggressive | 29.90% | 3.21% | 2.44 |
+
+Presets (slow / base / fast / silence): default 1.0 / 1.2 / 1.5 / 2.0, conservative 1.0 / 1.1 / 1.3 / 1.5, aggressive 1.0 / 1.3 / 1.75 / 2.5.
+
+- **WER vs original**: the original and the output are both transcribed by faster-whisper `small.en`; WER is the word-level edit distance between the two transcripts. On the clip with human captions the same model scores 1.44% WER on the untouched original, so differences of a few percent are within its noise.
+- **Processing**: wall time of `rubato auto` (analyse, plan, render) with the transcript supplied. Rubato's own `base` transcription added 1.37-1.75 s per minute of video.
+
+Full results, raw logs and transcripts: [`bench/results/`](bench/results/benchmark_results.md). Method, sources and licenses: [`bench/README.md`](bench/README.md), [`bench/SOURCES.md`](bench/SOURCES.md).
+
+```bash
+cd bench && ./fetch_videos.sh && python3 run_benchmark.py
+```
+
 ## FAQ
 
 ### Is there a Claude skill that speeds up only the boring parts of a video?

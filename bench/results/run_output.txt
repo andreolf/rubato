@@ -1,0 +1,86 @@
+Running: Getting duration of work/nasa-interview.mp4
+Running: Rubato transcribe work/nasa-interview.mp4
+Running: Rubato auto, preset default
+Running: Getting duration of work/nasa-interview.default.mp4
+Running: Rubato auto, preset conservative
+Running: Getting duration of work/nasa-interview.conservative.mp4
+Running: Rubato auto, preset aggressive
+Running: Getting duration of work/nasa-interview.aggressive.mp4
+Running: Getting duration of work/wikimania-privacy-talk.mp4
+Running: Rubato transcribe work/wikimania-privacy-talk.mp4
+Running: Rubato auto, preset default
+Running: Getting duration of work/wikimania-privacy-talk.default.mp4
+Running: Rubato auto, preset conservative
+Running: Getting duration of work/wikimania-privacy-talk.conservative.mp4
+Running: Rubato auto, preset aggressive
+Running: Getting duration of work/wikimania-privacy-talk.aggressive.mp4
+Running: Getting duration of work/wikimania-bot-talk.mp4
+Running: Rubato transcribe work/wikimania-bot-talk.mp4
+Running: Rubato auto, preset default
+Running: Getting duration of work/wikimania-bot-talk.default.mp4
+Running: Rubato auto, preset conservative
+Running: Getting duration of work/wikimania-bot-talk.conservative.mp4
+Running: Rubato auto, preset aggressive
+Running: Getting duration of work/wikimania-bot-talk.aggressive.mp4
+
+============================================================
+Benchmarking: nasa-interview
+============================================================
+
+
+--- Preset: default ---
+Duration: 300.0s -> 220.1s (26.6% cut)
+WER vs original: 0.0115
+Processing: 42.5s (8.5s/min)
+
+--- Preset: conservative ---
+Duration: 300.0s -> 249.6s (16.8% cut)
+WER vs original: 0.0202
+Processing: 46.5s (9.3s/min)
+
+--- Preset: aggressive ---
+Duration: 300.0s -> 199.5s (33.5% cut)
+WER vs original: 0.0086
+Processing: 41.1s (8.2s/min)
+
+============================================================
+Benchmarking: wikimania-privacy-talk
+============================================================
+
+
+--- Preset: default ---
+Duration: 283.5s -> 219.1s (22.7% cut)
+WER vs original: 0.0048 | vs captions: 0.0192 (original 0.0144)
+Processing: 19.0s (4.0s/min)
+
+--- Preset: conservative ---
+Duration: 283.5s -> 244.8s (13.6% cut)
+WER vs original: 0.0048 | vs captions: 0.0144 (original 0.0144)
+Processing: 18.8s (4.0s/min)
+
+--- Preset: aggressive ---
+Duration: 283.5s -> 200.1s (29.4% cut)
+WER vs original: 0.0080 | vs captions: 0.0128 (original 0.0144)
+Processing: 16.8s (3.6s/min)
+
+============================================================
+Benchmarking: wikimania-bot-talk
+============================================================
+
+
+--- Preset: default ---
+Duration: 178.2s -> 137.4s (22.9% cut)
+WER vs original: 0.0321
+Processing: 7.6s (2.5s/min)
+
+--- Preset: conservative ---
+Duration: 178.2s -> 153.9s (13.6% cut)
+WER vs original: 0.0292
+Processing: 8.2s (2.8s/min)
+
+--- Preset: aggressive ---
+Duration: 178.2s -> 124.9s (29.9% cut)
+WER vs original: 0.0321
+Processing: 7.3s (2.4s/min)
+
+Results saved to results/benchmark_results.json and .md
