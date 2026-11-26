@@ -152,6 +152,48 @@ Your own overrides go in a marks file, passed with `--marks marks.json`:
 
 Useful flags: `--base 1.2 --fast 1.5 --slow 1.0 --silence 2.0`, `--flat 1.25` (one speed throughout), `--max 1.3` (a ceiling), `--crf 18 --preset medium` (video quality), `--min-segment 2` (shortest stretch at its own speed), `--language it`, `--model small`, `--cues cues.json` (your own trigger phrases, or another language), `--plan-only`. The steps also exist separately as `transcribe`, `analyze`, `plan` and `render`. `plan.json` is a plain list of `{start, end, speed}` segments and can be edited by hand. `remap-srt` retimes subtitles to match. Audio files work too.
 
+## Benchmarks
+
+Rubato includes a reproducible benchmark suite measuring performance and accuracy preservation across different speed presets.
+
+### Quick Results
+
+| Metric | Typical Range | Notes |
+|--------|---------------|-------|
+| **Duration Cut** | 15-25% | For default preset (slow=1.0, base=1.2, fast=1.5, silence=2.0) |
+| **WER (Word Error Rate)** | < 0.05 | Transcription accuracy preserved; speed changes don't cut content |
+| **Processing Time** | 1-3 s/min | Depends on hardware; measured per minute of input video |
+
+### Methodology
+
+- **Test Videos**: Openly licensed (CC-BY/Public Domain) talking-head videos
+- **Transcription**: faster-whisper `base` model, pinned for reproducibility
+- **WER Calculation**: Levenshtein distance on normalized transcripts (original vs processed)
+- **Multiple Presets**: default, conservative, aggressive speed configurations
+
+### Running the Benchmark
+
+```bash
+cd bench
+
+# 1. Fetch test videos (or add your own)
+./fetch_videos.sh
+
+# 2. Install dependencies
+pip install faster-whisper imageio-ffmpeg
+
+# 3. Run benchmark
+python3 run_benchmark.py
+
+# Results saved to results/benchmark_results.json and results/benchmark_results.md
+```
+
+For detailed methodology, sources, and results, see [`bench/README.md`](bench/README.md) and [`bench/SOURCES.md`](bench/SOURCES.md).
+
+**Hardware**: Results are hardware-dependent. The benchmark records processing time per minute of video on the system used.
+
+**Note**: The included synthetic test video has no speech. For meaningful WER measurements, replace `work/sample1.mp4` with real talking-head content (see `bench/SOURCES.md` for suggested sources).
+
 ## FAQ
 
 ### Is there a Claude skill that speeds up only the boring parts of a video?

@@ -1,0 +1,11 @@
+# Working directory - contains large video files
+work/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary files
+*.tmp
+*.log
