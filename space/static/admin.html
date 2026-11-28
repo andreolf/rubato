@@ -54,7 +54,7 @@ td:last-child,th:last-child{padding-right:0}
 .scroll{overflow-x:auto}
 .ok{color:var(--ink)}.fail{color:var(--bad)}
 .funnel{display:grid;gap:12px;margin-top:6px}
-.funnel .row{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center}
+.funnel .row{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
 .funnel .name{font-size:14px;color:var(--text2)}
 .funnel .track{display:flex;align-items:center;gap:10px;min-width:0}
 .funnel .bar{height:22px;background:var(--s1);border-radius:0 4px 4px 0;min-width:2px}
@@ -103,9 +103,15 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--muted);font-size:13.5
 
   <div class="grid2">
     <div class="card"><h2>From visit to download</h2><p class="sub">Website visitors only. The connector is not included, because its calls arrive from Claude's servers, not from the person.</p>
-      <div class="funnel" id="funnel"></div></div>
+      <div class="funnel" id="funnel"></div><p class="sub" id="funnelNote" style="margin:14px 0 0"></p></div>
     <div class="card"><h2>Where visitors come from</h2><p class="sub">The referring site, or the tag on links like <code>?ref=x</code>.</p>
       <div id="refs"></div></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h2>What visitors did</h2><p class="sub">Buttons and links used on the home page, counted once per page load.</p><div id="actions"></div></div>
+    <div class="card"><h2>How long they stayed</h2><p class="sub">Time until the tab was closed or left.</p><div id="stay"></div></div>
+    <div class="card"><h2>Devices</h2><p class="sub">Of visits where the page actually loaded in a browser.</p><div id="devices"></div></div>
   </div>
 
   <div class="grid3">
@@ -199,11 +205,26 @@ function render() {
   $("dayTable").innerHTML = "<table><tr><th>Day</th><th class='num'>Visitors</th><th class='num'>Page views</th><th class='num'>Upload</th><th class='num'>Sample</th><th class='num'>Connector</th><th class='num'>Failed</th></tr>" +
     data.days.slice().reverse().map(d => `<tr><td>${dayLabel(d.date)}</td>${["visitors", "views", "upload", "sample", "connector", "failed"].map(k => `<td class="num">${num(d[k])}</td>`).join("")}</tr>`).join("") + "</table>";
 
-  const f = data.funnel, steps = [["Opened the site", f.visited], ["Started a job", f.started], ["Got a result", f.finished], ["Downloaded it", f.downloaded]];
+  const f = data.funnel, tracked = !!data.steps_since;
+  const steps = tracked
+    ? [["Opened the site", f.visited], ["Loaded in a real browser", f.real], ["Scrolled, clicked or typed", f.engaged],
+       ["Chose a file or the sample", f.tried], ["Started a job", f.started], ["Got a result", f.finished], ["Downloaded it", f.downloaded]]
+    : [["Opened the site", f.visited], ["Started a job", f.started], ["Got a result", f.finished], ["Downloaded it", f.downloaded]];
+  const top = steps[0][1];
   $("funnel").innerHTML = f.visited ? steps.map((s, i) => {
     const share = i && steps[i - 1][1] ? `<small> · ${Math.round(s[1] / steps[i - 1][1] * 100)}% of the step above</small>` : "";
-    return `<div class="row"><div class="name">${s[0]}</div><div class="track"><div class="bar" style="width:${Math.max(0.5, s[1] / f.visited * 62)}%"></div><div class="val">${num(s[1])}${share}</div></div></div>`;
+    return `<div class="row"><div class="name">${s[0]}</div><div class="track"><div class="bar" style="width:${Math.max(0.5, top ? s[1] / top * 62 : 0)}%"></div><div class="val">${num(s[1])}${share}</div></div></div>`;
   }).join("") : `<div class="empty">No visitors in this period yet.</div>`;
+  $("funnelNote").textContent = tracked
+    ? `Counts visits since ${dayLabel(data.steps_since)}, when the in-page steps started being recorded. A visit that never reaches "Loaded in a real browser" fetched the page without running it, which is what bots and link previews do.`
+    : "The in-page steps (real browser, interaction, file chosen) appear here after the first visit that records them.";
+
+  const actName = {pick: "Opened the file chooser", file: "Chose or dropped a file", sample: "Clicked the sample talk",
+    err: "Saw an error message", deep: "Scrolled past half the page", agents: "Clicked “Use it in Claude”", guide: "Opened the connector guide",
+    github: "Clicked a GitHub link", claude: "Clicked through to Claude's directory", feedback: "Clicked a feedback link", copy: "Copied text from the page"};
+  list("actions", (data.actions || []).map(a => [actName[a[0]] || a[0], a[1]]), "Action", "Nothing recorded in this period yet.");
+  list("stay", data.stay || [], "Time on page", "Nothing recorded in this period yet.");
+  list("devices", data.devices || [], "Device", "Nothing recorded in this period yet.");
 
   list("refs", data.referrers, "Source", "No visits in this period yet.");
   list("bots", data.bots, "Bot", "No crawler visits in this period yet.");

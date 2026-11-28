@@ -510,5 +510,33 @@ footer .fine{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-bet
   $('again').onclick=function(){if(media)media.pause();clearInterval(timer);show('upload');$('w-pct').textContent=''};
 })();
 </script>
+<script>
+/* Anonymous counts of what the page is used for. No content, no cookies. See /privacy. */
+(function(){
+  var sent={};
+  function ev(a,s){if(sent[a])return;sent[a]=1;try{var b=JSON.stringify(s==null?{a:a}:{a:a,s:s});
+    if(navigator.sendBeacon)navigator.sendBeacon('/api/e',new Blob([b],{type:'text/plain'}));
+    else fetch('/api/e',{method:'POST',body:b,keepalive:true})}catch(e){}}
+  ev('seen');
+  ['pointerdown','keydown','touchstart','wheel'].forEach(function(n){window.addEventListener(n,function(){ev('engaged')},{passive:true,once:true})});
+  window.addEventListener('scroll',function(){ev('engaged');
+    var d=document.documentElement;if(window.scrollY+window.innerHeight>=d.scrollHeight*0.5)ev('deep')},{passive:true});
+  var g=function(id){return document.getElementById(id)};
+  g('drop').addEventListener('click',function(){ev('pick')});
+  g('drop').addEventListener('drop',function(){ev('file')});
+  g('pick').addEventListener('change',function(){ev('file')});
+  g('sample').addEventListener('click',function(){ev('sample')});
+  new MutationObserver(function(){if(!g('err').hidden)ev('err')}).observe(g('err'),{attributes:true,attributeFilter:['hidden']});
+  document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;var h=a.getAttribute('href')||'';
+    if(h.indexOf('/issues/')>=0)ev('feedback');else if(h.indexOf('github.com')>=0)ev('github');
+    else if(h.indexOf('claude.ai')>=0)ev('claude');else if(h==='#agents')ev('agents');else if(h==='/connector')ev('guide')});
+  document.addEventListener('copy',function(){ev('copy')});
+  /* time the page was actually on screen; a tab opened in the background has not been seen yet */
+  var shown=0,since=document.visibilityState==='visible'?Date.now():0;
+  var bye=function(){if(since){shown+=Date.now()-since;since=0}if(shown>=1000)ev('leave',Math.round(shown/1000))};
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')bye();else if(!since)since=Date.now()});
+  window.addEventListener('pagehide',bye);
+})();
+</script>
 </body>
 </html>
