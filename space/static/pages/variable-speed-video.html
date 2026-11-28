@@ -1,0 +1,58 @@
+<!-- {
+"title": "Variable speed video: what dynamic playback speed is and how it works | Rubato",
+"h1": "Variable speed video, explained",
+"description": "Variable (dynamic) speed changes how fast a video plays from passage to passage, based on what is being said. What it is, how it differs from 1.5x and silence removal, and how to make one.",
+"lead": "A variable speed video plays each passage at its own speed: normal for the parts that matter, faster for filler and silence. The result is one continuous file that takes less time to watch.",
+"kind": "guide",
+"date": "2026-11-28",
+"card": "What dynamic playback speed is, how it is decided, and how it compares with 1.5x and silence removal.",
+"faq": [
+ ["What is variable speed playback?", "Playback where the speed changes during the video instead of staying at one number. Important passages play at normal speed, ordinary ones a little faster, and filler and silence much faster."],
+ ["How do I speed up only the boring parts of a video?", "Upload it to Rubato. It transcribes the recording, keeps takeaways, lists and key numbers at 1x, plays ordinary passages at 1.2x, filler at 1.5x and silence at 2x, and returns one continuous video with nothing removed."],
+ ["Does variable speed make voices sound high-pitched?", "No. Rubato time-stretches the audio, so voices keep their natural pitch at every speed."],
+ ["Does it work on music?", "Not well, and Rubato does not try. Changing the speed of music makes the tempo lurch, so when a recording has constant sound and no key passages are found, it uses one flat speed and says so. Speech over background music still works."]
+]
+} -->
+<h2>What it is</h2>
+<p>Normal speed controls give you one number for the whole video. Variable speed, also called dynamic speed or smart speed, gives every passage its own number. The video is re-timed once and saved as a new file, so it plays the same way in any player, on any device, with no extension or special app.</p>
+
+<h2>How Rubato decides the speed of each passage</h2>
+<p>Three layers, each overriding the one before:</p>
+<ol>
+<li><b>Sound and picture.</b> Pauses and flat, halting stretches are found from the audio and from how much the picture changes. These only ever make a passage faster. A pause while something is happening on screen is not treated as dead air.</li>
+<li><b>The transcript, by phrase.</b> The recording is transcribed and sentences that announce themselves are recognised: "the key takeaway", "three things you need to know", "number two", "in summary", figures and percentages. Those slow down. "Can you hear me" and "thanks for watching" speed up.</li>
+<li><b>The transcript, read by an AI agent.</b> When Rubato is used as a skill or connector, the agent reads the transcript and marks the real conclusions, the complete lists and the tangents, including the ones nobody labelled.</li>
+</ol>
+
+<h2>The default speeds</h2>
+<div class="scroll"><table>
+<tr><th>What is happening</th><th class="n">Speed</th></tr>
+<tr><td>A takeaway, a list, key numbers</td><td class="n">1.0x</td></tr>
+<tr><td>Everything ordinary</td><td class="n">1.2x</td></tr>
+<tr><td>Logistics, hesitation, flat stretches</td><td class="n">1.5x</td></tr>
+<tr><td>Dead air</td><td class="n">2.0x</td></tr>
+</table></div>
+<p>All four are adjustable. If you normally watch at 1.5x, set the ordinary speed to 1.5x and raise the others to match.</p>
+
+<h2>How it compares</h2>
+<div class="scroll"><table>
+<tr><th></th><th>One flat speed</th><th>Silence removal</th><th>Variable speed</th></tr>
+<tr><td><b>Key passages</b></td><td>Rushed like everything else</td><td>Untouched</td><td>Kept at normal speed</td></tr>
+<tr><td><b>Spoken filler</b></td><td>Slightly faster</td><td>Untouched</td><td>Faster</td></tr>
+<tr><td><b>Silence</b></td><td>Slightly faster</td><td>Deleted</td><td>Much faster, still visible</td></tr>
+<tr><td><b>Is anything removed?</b></td><td>No</td><td>Yes</td><td>No</td></tr>
+<tr><td><b>Picture</b></td><td>Continuous</td><td>Jumps at every cut</td><td>Continuous</td></tr>
+</table></div>
+
+<h2>What it is good for, and what it is not</h2>
+<p>It suits recordings where someone talks: lectures, conference talks, meetings, interviews, podcasts, tutorials and narrated screen recordings.</p>
+<p>It does not suit music, films, or anything where timing is the point. The built-in phrases are English; other languages are transcribed, but fewer passages are recognised unless an agent reads the transcript.</p>
+
+<h2>How to make one</h2>
+<ul>
+<li><b>In the browser:</b> <a href="/?ref=variable-speed-video">upload a file</a> of up to {{MAX_MINUTES}} minutes.</li>
+<li><b>In Claude:</b> connect <a href="/connector?ref=variable-speed-video">the Rubato connector</a> and give it a link to the video.</li>
+<li><b>On your own machine, with no length limit:</b></li>
+</ul>
+<pre>uvx --from git+https://github.com/andreolf/rubato rubato auto talk.mp4</pre>
+<p>This writes <code>talk.rubato.mp4</code> next to the original. Add <code>--plan-only</code> to see the speed map before rendering.</p>

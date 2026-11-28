@@ -1,0 +1,46 @@
+<!-- {
+"title": "How to watch lectures faster without missing the important parts | Rubato",
+"h1": "How to watch lectures faster without missing the important parts",
+"description": "Get through recorded lectures in less time by speeding up the filler and silence and keeping definitions, lists and key numbers at normal speed. A free, open-source method.",
+"lead": "Speed up the housekeeping, the pauses and the tangents, and leave the definitions, lists and results at the speed the lecturer gave them.",
+"kind": "guide",
+"date": "2026-11-28",
+"card": "Get through recorded lectures in less time while definitions, lists and results stay at normal speed.",
+"faq": [
+ ["Does watching lectures at 2x hurt learning?", "A 2021 UCLA study found that comprehension at 1.5x and 2x was only slightly lower than at normal speed, and that it dropped beyond 2x. The authors add that this may not hold for difficult material, which is the reason to keep the hard passages at normal speed."],
+ ["How long a lecture can I upload?", "The online demo takes recordings up to {{MAX_MINUTES}} minutes and {{MAX_MB}} MB. For full-length lectures, run Rubato on your own computer as a command-line tool or agent skill; it has no length limit."],
+ ["Does it work for lectures that are not in English?", "The recording is transcribed in any language, but the built-in phrases that mark a takeaway or a list are English. For other languages, use Rubato through an AI agent, which reads the transcript and marks the important passages itself."],
+ ["Will my subtitles still line up?", "Yes. Nothing is cut, so every moment of the original maps to a moment in the new file, and the command-line tool can retime a subtitle file to match."]
+]
+} -->
+<h2>Where the time in a lecture goes</h2>
+<p>A recorded lecture is not dense from start to finish. A good part of it is the lecturer finding the right slide, waiting for a question, repeating a point for the back row, or writing on the board in silence. Those minutes are safe to speed up a lot. The definition, the worked example and "there are three cases" are not.</p>
+<p>A flat 1.5x or 2x treats both the same, so you end up rewinding exactly where it matters.</p>
+
+<h2>The method</h2>
+<ol>
+<li><b>Get the recording as a file.</b> Most lecture platforms let you download the video; a screen recording works too.</li>
+<li><b>Run it through Rubato.</b> It transcribes the lecture and gives each passage a speed.</li>
+<li><b>Watch the new file</b> in any player. You can still use your player's speed control on top.</li>
+</ol>
+<div class="scroll"><table>
+<tr><th>In the lecture</th><th class="n">Speed</th></tr>
+<tr><td>"The key idea is", "there are three cases", a formula read out, a result with numbers</td><td class="n">1.0x</td></tr>
+<tr><td>Explanation and examples</td><td class="n">1.2x</td></tr>
+<tr><td>"Can everyone see this", "let me find the slide", restarts</td><td class="n">1.5x</td></tr>
+<tr><td>Silence with nothing changing on screen</td><td class="n">2.0x</td></tr>
+</table></div>
+<p>Silence while the lecturer is writing or a slide is building is not treated as dead air, because something is happening on screen.</p>
+
+<h2>For a full-length lecture</h2>
+<p>The online demo is limited to {{MAX_MINUTES}} minutes. For an hour or more, run it on your own computer, where there is no limit and the file never leaves your machine:</p>
+<pre>uvx --from git+https://github.com/andreolf/rubato rubato auto lecture.mp4</pre>
+<p>If you already watch at 1.5x, keep that as your ordinary speed and let the rest scale around it:</p>
+<pre>uvx --from git+https://github.com/andreolf/rubato rubato auto lecture.mp4 --base 1.5 --fast 2 --silence 3</pre>
+
+<h2>Let an AI agent pick the passages</h2>
+<p>Phrase matching only finds takeaways that are announced. Lecturers often do not announce them. If you use Claude, Cursor or another agent, install Rubato as a skill and ask it to speed up the lecture: the agent reads the whole transcript and marks the real definitions, results and tangents before the video is rendered.</p>
+<pre>npx skills add andreolf/rubato</pre>
+
+<h2>What to expect</h2>
+<p>How much time you save depends on the lecture. With the default speeds, the 54-second sample talk on the home page comes out at 44 seconds, about what a flat 1.2x gives, with the passages that matter untouched. Raising the ordinary speed saves more. A tightly scripted lecture has less to give back than a live, improvised one.</p>

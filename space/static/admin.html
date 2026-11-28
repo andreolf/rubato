@@ -105,7 +105,8 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--muted);font-size:13.5
     <div class="card"><h2>From visit to download</h2><p class="sub">Website visitors only. The connector is not included, because its calls arrive from Claude's servers, not from the person.</p>
       <div class="funnel" id="funnel"></div><p class="sub" id="funnelNote" style="margin:14px 0 0"></p></div>
     <div class="card"><h2>Where visitors come from</h2><p class="sub">The referring site, or the tag on links like <code>?ref=x</code>.</p>
-      <div id="refs"></div></div>
+      <div id="refs"></div>
+      <h2 style="margin-top:22px">Pages they open</h2><p class="sub">Page views by address. Crawlers are left out.</p><div id="pages"></div></div>
   </div>
 
   <div class="grid3">
@@ -226,6 +227,7 @@ function render() {
   list("stay", data.stay || [], "Time on page", "Nothing recorded in this period yet.");
   list("devices", data.devices || [], "Device", "Nothing recorded in this period yet.");
 
+  list("pages", data.pages || [], "Page", "No visits in this period yet.");
   list("refs", data.referrers, "Source", "No visits in this period yet.");
   list("bots", data.bots, "Bot", "No crawler visits in this period yet.");
   list("errors", data.errors, "Reason", "Nothing has failed in this period.");

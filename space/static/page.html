@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/svg+xml" href="/icon.svg">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESC}}">
+<link rel="canonical" href="{{SITE_URL}}/{{SLUG}}">
+<meta property="og:type" content="{{OGTYPE}}"><meta property="og:title" content="{{H1}}"><meta property="og:description" content="{{DESC}}">
+<meta property="og:url" content="{{SITE_URL}}/{{SLUG}}"><meta property="og:image" content="{{SITE_URL}}/og.svg"><meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{{JSONLD}}</script>
+<style>body{margin:0;background:#faf8f4;color:#171512;font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:40px 24px 72px}
+.crumbs{font-size:15px;color:#6b665e}.crumbs a{color:#6b665e}
+h1{font-size:38px;letter-spacing:-.02em;line-height:1.12;margin:18px 0 10px;text-wrap:balance}
+h2{font-size:23px;line-height:1.25;margin:40px 0 8px;letter-spacing:-.01em}h3{font-size:17.5px;margin:24px 0 4px}
+p,li{color:#4a463f}li{margin:4px 0}a{color:#c2380f}b,strong{color:#171512}
+.lead{font-size:20px;line-height:1.5;color:#4a463f;margin:0 0 6px}.date{font-size:14.5px;color:#6b665e;margin:0 0 8px}
+code{font:14px ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;border:1px solid #e7e2d9;border-radius:6px;padding:1px 6px;color:#171512}
+pre{background:#171512;color:#f3efe8;border-radius:12px;padding:14px 16px;overflow:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #e7e2d9;border-radius:12px;overflow:hidden}
+td,th{text-align:left;padding:10px 14px;border-top:1px solid #e7e2d9;font-size:15.5px;vertical-align:top;color:#4a463f}
+th{border-top:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b665e}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.try{margin:44px 0 0;background:#171512;color:#f3efe8;border-radius:16px;padding:26px 26px 28px}
+.try h2{color:#fff;margin:0 0 6px}.try p{color:#cfc8bb;margin:0 0 16px}
+.btn{display:inline-block;background:#ff5a2b;color:#171512;font-weight:650;text-decoration:none;border-radius:999px;padding:11px 20px;margin:0 8px 8px 0}
+.btn.ghost{background:transparent;color:#f3efe8;border:1px solid #57514a}
+.more{margin-top:44px;border-top:1px solid #e7e2d9;padding-top:22px}.more h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:#6b665e;margin:0 0 8px}
+.more ul{list-style:none;padding:0;margin:0}.more li{margin:8px 0}
+footer{max-width:720px;margin:0 auto;padding:0 24px 48px;font-size:14.5px;color:#6b665e}footer a{color:#6b665e}
+@media(max-width:520px){h1{font-size:30px}.lead{font-size:18px}td,th{padding:8px 10px;font-size:14.5px}}</style></head>
+<body><main>
+<p class="crumbs"><a href="/">Rubato</a> › <a href="/guides">Guides</a></p>
+<article>
+<h1>{{H1}}</h1>
+<p class="lead">{{LEAD}}</p>
+{{DATELINE}}
+{{BODY}}
+{{FAQ}}
+</article>
+<div class="try">
+  <h2>Try it on your own recording</h2>
+  <p>Upload a video or audio file of up to {{MAX_MINUTES}} minutes and get it back at dynamic speed. Free, no account, nothing is cut.</p>
+  <a class="btn" href="/?ref={{SLUG}}">Upload a video</a><a class="btn ghost" href="/connector?ref={{SLUG}}">Use it in Claude</a><a class="btn ghost" href="{{REPO}}">Install from GitHub</a>
+</div>
+<nav class="more" aria-label="More guides"><h2>More guides</h2><ul>{{MORE}}</ul></nav>
+</main>
+<footer>Rubato · free and open source, MIT license · <a href="{{REPO}}">GitHub</a> · <a href="/privacy">Privacy</a></footer>
+</body></html>

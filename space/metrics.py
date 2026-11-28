@@ -266,7 +266,7 @@ def stats(days: int = 30) -> dict:
     recent = collections.deque(maxlen=40)
     first_day = None
     steps = {k: set() for k in ("seen", "engaged", "tried")}
-    actions, devices, stay = (collections.Counter() for _ in range(3))
+    actions, devices, stay, pages = (collections.Counter() for _ in range(4))
     steps_since = None
 
     for day, ev in _events():
@@ -287,6 +287,7 @@ def stats(days: int = 30) -> dict:
             if here:
                 per_day[day]["views"] += 1
                 refs[ev.get("ref") or "direct"] += 1
+                pages[ev.get("path") or "/"] += 1
                 if v:
                     funnel["visited"].add((day, v))
         elif kind == "act":
@@ -362,7 +363,7 @@ def stats(days: int = 30) -> dict:
                    "finished": len(finished), "downloaded": len(funnel["downloaded"] & finished),
                    "real": len(real), "engaged": len(engaged),
                    "tried": len(steps["tried"] & real)},
-        "steps_since": steps_since, "actions": _top(actions, 20), "devices": _top(devices),
+        "pages": _top(pages, 15), "steps_since": steps_since, "actions": _top(actions, 20), "devices": _top(devices),
         "stay": [[label, stay[label]] for label, _ in STAY if stay[label]],
         "referrers": _top(refs), "bots": _top(bots), "errors": _top(errors),
         "languages": _top(langs, 8), "kinds": _top(kinds),

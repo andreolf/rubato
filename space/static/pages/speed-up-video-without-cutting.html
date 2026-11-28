@@ -1,0 +1,48 @@
+<!-- {
+"title": "Speed up a video without cutting anything: variable speed vs silence removal | Rubato",
+"h1": "Speed up a video without cutting anything",
+"description": "Silence removers and jump-cut tools shorten a video by deleting parts of it. Variable speed shortens it by playing the empty parts faster. How the two compare and when to use each.",
+"lead": "There are two ways to make a talking video shorter: delete the quiet parts, or play them faster. They give different results, and which one you want depends on what the video is for.",
+"kind": "guide",
+"date": "2026-11-28",
+"card": "Silence removal deletes parts of a video; variable speed plays them faster. When to use each.",
+"faq": [
+ ["Is Rubato a silence remover?", "No. It never removes content. Silence plays at 2x by default and spoken filler at 1.5x, but every moment of the original is still in the result."],
+ ["How do I shorten a video without jump cuts?", "Change speed instead of cutting. Rubato plays silence and filler faster and keeps important passages at normal speed, so the picture stays continuous with no jumps."],
+ ["Which saves more time, cutting silence or variable speed?", "On silence alone, cutting saves more, because a deleted pause takes no time and a pause at 2x still takes half. Variable speed also speeds up spoken filler and ordinary passages, which cutting does not touch."],
+ ["Can I use both?", "Yes. Editors who publish videos often cut first and are done. If you are watching rather than publishing, variable speed alone is usually enough and leaves the recording intact."]
+]
+} -->
+<h2>What cutting does</h2>
+<p>Silence removers find the stretches where the audio is quiet and delete them. Jump-cut editors do the same thing with more control. The result is tighter, and it is the standard look of a lot of online video.</p>
+<p>The costs come from the deletion:</p>
+<ul>
+<li><b>The picture jumps</b> at every cut. Fine for a talking head, distracting for a screen recording or a slide deck.</li>
+<li><b>Anything that happened during the quiet is gone.</b> A demo loading, a slide building, a diagram being drawn.</li>
+<li><b>Subtitles and timestamps no longer match</b> the original.</li>
+<li><b>Only silence is affected.</b> Filler that is spoken aloud stays at full length.</li>
+</ul>
+
+<h2>What changing speed does</h2>
+<p>Variable speed keeps every frame and changes how long each one is shown. Quiet stretches play at 2x or more, spoken filler a little faster, and the important passages at normal speed. The video stays continuous, and because nothing is removed, every moment of the original maps to a moment in the result, so subtitles can be retimed exactly.</p>
+
+<h2>Side by side</h2>
+<div class="scroll"><table>
+<tr><th></th><th>Silence removal / jump cuts</th><th>Variable speed (Rubato)</th></tr>
+<tr><td><b>Silence</b></td><td>Deleted</td><td>Played fast, still visible</td></tr>
+<tr><td><b>Spoken filler</b></td><td>Unchanged</td><td>Played faster</td></tr>
+<tr><td><b>Key passages</b></td><td>Unchanged</td><td>Kept at normal speed</td></tr>
+<tr><td><b>Picture</b></td><td>Jumps at each cut</td><td>Continuous</td></tr>
+<tr><td><b>Decides by</b></td><td>Loudness</td><td>What is said, plus sound and picture</td></tr>
+<tr><td><b>Subtitles</b></td><td>Need rebuilding</td><td>Can be retimed exactly</td></tr>
+<tr><td><b>Best for</b></td><td>Publishing a tight edit</td><td>Watching or sharing a full recording in less time</td></tr>
+</table></div>
+
+<h2>When to use which</h2>
+<p><b>Cut</b> when you are the editor and the goal is a finished piece: a vlog, a short, a course video where pace is part of the style.</p>
+<p><b>Change speed</b> when the recording is a record: a lecture, a meeting, a talk, a tutorial someone else made. You want all of it, in less time, without deciding what to throw away.</p>
+
+<h2>Doing it</h2>
+<p><a href="/?ref=speed-up-video-without-cutting">Upload a file</a> in the browser, connect <a href="/connector?ref=speed-up-video-without-cutting">Rubato in Claude</a>, or run it locally:</p>
+<pre>uvx --from git+https://github.com/andreolf/rubato rubato auto recording.mp4</pre>
+<p>To preview what would change before rendering anything, add <code>--plan-only</code>. If you want one constant speed with no variation, <code>--flat 1.25</code> does that.</p>
