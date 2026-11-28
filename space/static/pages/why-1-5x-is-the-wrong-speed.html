@@ -1,0 +1,51 @@
+<!-- {
+"title": "Why 1.5x is the wrong speed for most videos | Rubato",
+"h1": "Why 1.5x is the wrong speed",
+"description": "A single playback speed is too fast for the parts you need and too slow for the rest. Here is the arithmetic, the research, and what to do instead.",
+"lead": "One speed for a whole recording is too fast for the two minutes that matter and too slow for everything else. The fix is to stop choosing one speed.",
+"kind": "article",
+"date": "2026-11-28",
+"card": "The case against one flat playback speed, with the arithmetic and the research.",
+"faq": [
+ ["Is watching at 1.5x bad for learning?", "Not by itself. In a 2021 UCLA study, students who watched lecture videos at 1.5x or 2x scored only slightly lower than those who watched at normal speed, and scores dropped beyond 2x. The problem with a flat 1.5x is that it treats every minute the same, so the dense parts are rushed and the empty parts are still slower than they need to be."],
+ ["What speed should I watch lectures at?", "There is no single right number. A speed you can follow during an aside is too fast during a derivation. Use a higher speed for ordinary talk and silence, and normal speed for conclusions, lists and numbers. Rubato does this automatically from the transcript."],
+ ["Can I save the same time as 1.5x without rushing the key parts?", "Yes. If about a fifth of a talk is key material, playing that fifth at 1x, ordinary passages at 1.5x, filler at 2x and silence at 3x takes the same total time as a flat 1.5x."]
+]
+} -->
+<p>Most people who watch recorded talks, lectures or meetings settle on a number. 1.25x if they are careful, 1.5x if they are busy, 2x if they are behind. The number feels like a preference. It is closer to a compromise, and not a good one.</p>
+
+<h2>A recording is not one thing</h2>
+<p>An hour of someone talking is not an hour of equally useful material. It is roughly four kinds of time mixed together:</p>
+<ul>
+<li><b>The parts you came for.</b> A conclusion, a list of steps, a figure, a decision.</li>
+<li><b>Ordinary talk.</b> Context, examples, the path between two points.</li>
+<li><b>Filler.</b> "Can everyone hear me", "let me share my screen", restarts, tangents, thanks.</li>
+<li><b>Dead air.</b> Pauses while nothing happens on screen.</li>
+</ul>
+<p>A flat speed applies the same number to all four. At 1.5x the conclusion goes by half again as fast as the speaker meant it to, at the exact moment you would like to slow down. And the thirty seconds of "is this thing on" still takes twenty seconds, which is twenty more than it deserves.</p>
+
+<h2>What the research says, and what it does not</h2>
+<p>Speeding up is not the problem. In a 2021 study from UCLA, students watched lecture videos at 1x, 1.5x, 2x and 2.5x and were tested straight away and again a week later. Comprehension at 1.5x and 2x was only slightly lower than at normal speed, and it fell off beyond 2x. (<a href="https://doi.org/10.1002/acp.3899">Murphy and colleagues, <i>Applied Cognitive Psychology</i></a>.) The authors also note that this may not hold for difficult material.</p>
+<p>That last point is the interesting one. The study measures one speed over a whole video. It does not say every minute tolerates speed equally. Anyone who has rewound a sped-up lecture knows where the rewinds happen: at the definition, the formula, the third item of the list. Those moments are a small share of the runtime and nearly all of the value.</p>
+
+<h2>The arithmetic</h2>
+<p>Take a 60-minute talk and suppose it splits like this: 20% key material, 50% ordinary talk, 20% filler, 10% silence. Three ways to watch it:</p>
+<div class="scroll"><table>
+<tr><th>How you watch</th><th class="n">Key parts</th><th class="n">Ordinary</th><th class="n">Filler</th><th class="n">Silence</th><th class="n">Total</th></tr>
+<tr><td>Normal speed</td><td class="n">1.0x</td><td class="n">1.0x</td><td class="n">1.0x</td><td class="n">1.0x</td><td class="n">60 min</td></tr>
+<tr><td>Flat 1.5x</td><td class="n">1.5x</td><td class="n">1.5x</td><td class="n">1.5x</td><td class="n">1.5x</td><td class="n">40 min</td></tr>
+<tr><td>Dynamic, same total</td><td class="n">1.0x</td><td class="n">1.5x</td><td class="n">2.0x</td><td class="n">3.0x</td><td class="n">40 min</td></tr>
+<tr><td>Dynamic, gentle defaults</td><td class="n">1.0x</td><td class="n">1.2x</td><td class="n">1.5x</td><td class="n">2.0x</td><td class="n">48 min</td></tr>
+</table></div>
+<p>The second and third rows take the same 40 minutes. In one of them the twelve minutes that matter play at the speed the speaker chose. In the other they are the first thing to blur. The time is the same; it is spent in different places.</p>
+<p>The split above is an illustration, not a measurement, and real recordings vary. A tight conference talk has little to give back. A recorded meeting often has a great deal.</p>
+
+<h2>Why not just cut the silence?</h2>
+<p>Silence removers and jump-cut tools take a different route: they delete the quiet parts. That saves time, but it changes the recording. The picture jumps, slides and demos lose their timing, subtitles drift, and a pause that was there for a reason is gone. It also does nothing about filler that is spoken out loud.</p>
+<p>Changing speed keeps everything. Nothing is removed, so the video stays continuous and you can still see what happened during the pause, just faster.</p>
+
+<h2>What to do instead</h2>
+<p>You can do this by hand: ride the speed control, drop to 1x when the speaker says "the key point is", push it up during the housekeeping. It works and it is tiring, and you only find out a passage mattered after it has gone by.</p>
+<p><a href="/?ref=why-1-5x-is-the-wrong-speed">Rubato</a> does it ahead of time. It transcribes the recording, finds the sentences that announce a takeaway, start a list or carry key numbers, and keeps those at normal speed. Ordinary passages play at 1.2x, filler at 1.5x and dead air at 2x. Every speed is adjustable, voices keep their pitch, and nothing is cut. Used through Claude or another AI agent, the agent reads the transcript itself and marks the conclusions that nobody labelled as conclusions.</p>
+<p>On a 54-second sample talk the result is 44 seconds: about what a flat 1.2x gives, except that 36% of the talk, the part with the takeaway and the list, plays at normal speed.</p>
+<p>The useful question is not "what speed do I watch at". It is "which parts deserve my full attention", and that is a question about the content, which a speed dial cannot answer.</p>

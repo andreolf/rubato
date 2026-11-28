@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import datetime
+import html
 import hmac
 import importlib.util
 import ipaddress
@@ -439,7 +441,9 @@ async def privacy():
 async def llms(request: Request):
     metrics.track("bot", bot=metrics.bot_name(request.headers.get("user-agent") or "") or "Browser",
                   path="/llms.txt")
-    return page("llms.txt")
+    guides = "\n## Guides\n\n" + "\n".join(
+        f"- [{m['h1']}]({SITE_URL}/{slug}): {m['card']}" for slug, (m, _) in GUIDES.items()) + "\n"
+    return page("llms.txt").rstrip("\n") + "\n" + guides
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
@@ -448,11 +452,120 @@ async def robots():
     return "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin" + sitemap + "\n"
 
 
+# ---------------------------------------------------------------------------
+# Guides: articles kept as HTML fragments in static/pages, in a shared layout
+# ---------------------------------------------------------------------------
+GUIDE_ORDER = ["why-1-5x-is-the-wrong-speed", "variable-speed-video", "watch-lectures-faster",
+               "speed-up-meeting-recordings", "speed-up-video-without-cutting"]
+
+
+def _fill(text: str) -> str:
+    return (text.replace("{{MAX_MINUTES}}", f"{MAX_MINUTES:g}").replace("{{MAX_MB}}", f"{MAX_MB:g}")
+            .replace("{{SITE_URL}}", SITE_URL).replace("{{REPO}}", REPO))
+
+
+def _load_guides() -> dict:
+    out = {}
+    for slug in GUIDE_ORDER:
+        with open(os.path.join(STATIC, "pages", slug + ".html"), encoding="utf-8") as f:
+            head, body = f.read().split("-->", 1)
+        meta = json.loads(head.split("<!--", 1)[1])
+        meta["faq"] = [[_fill(q), _fill(a)] for q, a in meta.get("faq", [])]
+        out[slug] = (meta, body.strip())
+    return out
+
+
+GUIDES = _load_guides()
+
+
+def _ld(*things) -> str:
+    return json.dumps({"@context": "https://schema.org", "@graph": list(things)},
+                      ensure_ascii=False).replace("</", "<\\/")
+
+
+def _crumbs(*steps) -> dict:
+    return {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i + 1, "name": name, "item": SITE_URL + path}
+        for i, (name, path) in enumerate(steps)]}
+
+
+def _layout(slug: str, meta: dict, body: str, ld: str, faq: str = "", dateline: str = "") -> str:
+    more = "".join(f'<li><a href="/{s}">{html.escape(m["h1"])}</a></li>'
+                   for s, (m, _) in GUIDES.items() if s != slug)
+    e = lambda k: html.escape(meta[k], quote=True)
+    out = page("page.html")
+    for key, value in (("{{TITLE}}", e("title")), ("{{DESC}}", e("description")), ("{{H1}}", e("h1")),
+                       ("{{LEAD}}", e("lead")), ("{{OGTYPE}}", "article" if meta.get("date") else "website"),
+                       ("{{DATELINE}}", dateline), ("{{FAQ}}", faq), ("{{MORE}}", more),
+                       ("{{JSONLD}}", ld), ("{{BODY}}", _fill(body)), ("{{SLUG}}", slug)):
+        out = out.replace(key, value)
+    if not more or slug == "guides":            # the index already lists every guide
+        start, end = out.index('<nav class="more"'), out.index("</nav>") + len("</nav>")
+        out = out[:start] + out[end:]
+    return out
+
+
+def _guide_html(slug: str) -> str:
+    meta, body = GUIDES[slug]
+    url = f"{SITE_URL}/{slug}"
+    org = {"@type": "Organization", "name": "Rubato", "url": SITE_URL + "/"}
+    things = [{"@type": "Article", "headline": meta["h1"], "description": meta["description"],
+               "datePublished": meta["date"], "dateModified": meta["date"], "author": org, "publisher": org,
+               "mainEntityOfPage": url, "image": SITE_URL + "/og.svg"},
+              _crumbs(("Rubato", "/"), ("Guides", "/guides"), (meta["h1"], "/" + slug))]
+    faq = ""
+    if meta["faq"]:
+        things.append({"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in meta["faq"]]})
+        faq = "<h2>Common questions</h2>" + "".join(
+            f"<h3>{html.escape(q)}</h3><p>{html.escape(a)}</p>" for q, a in meta["faq"])
+    when = datetime.date.fromisoformat(meta["date"])
+    dateline = f'<p class="date">Published <time datetime="{meta["date"]}">{when.day} {when:%B %Y}</time></p>'
+    return _layout(slug, meta, body, _ld(*things), faq, dateline)
+
+
+def _guides_index_html() -> str:
+    meta = {"title": "Guides: watching recorded video in less time | Rubato",
+            "h1": "Guides",
+            "description": "Short guides on watching lectures, talks and meeting recordings in less time with "
+                           "dynamic speed, and how it compares with 1.5x and silence removal.",
+            "lead": "How to get through recorded lectures, talks and meetings in less time without missing "
+                    "the parts that matter."}
+    body = "".join(f'<h2><a href="/{s}">{html.escape(m["h1"])}</a></h2><p>{html.escape(m["card"])}</p>'
+                   for s, (m, _) in GUIDES.items())
+    things = [{"@type": "CollectionPage", "name": "Rubato guides", "url": SITE_URL + "/guides",
+               "hasPart": [{"@type": "Article", "headline": m["h1"], "url": f"{SITE_URL}/{s}"}
+                           for s, (m, _) in GUIDES.items()]},
+              _crumbs(("Rubato", "/"), ("Guides", "/guides"))]
+    return _layout("guides", meta, body, _ld(*things))
+
+
+@app.get("/guides", response_class=HTMLResponse)
+async def guides_index(request: Request):
+    metrics.page_view(request, "/guides")
+    return _guides_index_html()
+
+
+def _add_guide_route(slug: str) -> None:
+    async def guide(request: Request):
+        metrics.page_view(request, "/" + slug)
+        return HTMLResponse(_guide_html(slug))
+    app.add_api_route("/" + slug, guide, methods=["GET"], response_class=HTMLResponse, name="guide_" + slug)
+
+
+for _slug in GUIDE_ORDER:
+    _add_guide_route(_slug)
+
+
 @app.get("/sitemap.xml")
 async def sitemap():
+    urls = [("/", None), ("/connector", None), ("/guides", None)]
+    urls += [("/" + s, m["date"]) for s, (m, _) in GUIDES.items()] + [("/privacy", None)]
     body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-            f"<url><loc>{SITE_URL}/</loc></url><url><loc>{SITE_URL}/connector</loc></url><url><loc>{SITE_URL}/privacy</loc></url></urlset>\n")
+            + "".join(f"<url><loc>{SITE_URL}{path}</loc>" + (f"<lastmod>{day}</lastmod>" if day else "") + "</url>"
+                      for path, day in urls) + "</urlset>\n")
     return PlainTextResponse(body, media_type="application/xml")
 
 

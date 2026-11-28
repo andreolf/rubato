@@ -1,0 +1,47 @@
+<!-- {
+"title": "How to speed up meeting recordings and still catch the decisions | Rubato",
+"h1": "How to speed up meeting recordings",
+"description": "Catch up on a recorded Zoom, Meet or Teams call in less time: silence and small talk play fast, decisions, action items and numbers play at normal speed. Nothing is cut.",
+"lead": "Catching up on a call you missed should not take as long as the call. Play the waiting and the small talk fast, and the decisions and numbers at normal speed.",
+"kind": "guide",
+"date": "2026-11-28",
+"card": "Catch up on a recorded call in less time, with decisions, action items and numbers at normal speed.",
+"faq": [
+ ["Can I use this on Zoom, Google Meet or Teams recordings?", "Yes. Download the recording as a video or audio file (MP4, MOV, WebM, MKV, MP3, M4A or WAV) and upload it, or run Rubato on your own computer."],
+ ["Is it safe for confidential meetings?", "Do not send confidential recordings to the public demo. Run Rubato locally as a command-line tool, skill or local MCP server instead: the file is processed on your computer and nothing is uploaded."],
+ ["Is this the same as an AI meeting summary?", "No. A summary replaces the recording with someone else's reading of it. Rubato keeps the whole recording, in the speakers' own words, and only changes how fast each part plays."],
+ ["Does it remove silences?", "No. Silences play at 2x by default but stay in the recording, so the video is continuous and screen shares keep their timing."]
+]
+} -->
+<h2>Why meetings gain the most</h2>
+<p>A scripted talk has little slack. A meeting has a lot: people joining, "can you see my screen", waiting for a page to load, someone thinking out loud. The parts you need when catching up are short and scattered: what was decided, who is doing what, the dates and the figures.</p>
+
+<h2>What plays at which speed</h2>
+<div class="scroll"><table>
+<tr><th>In the meeting</th><th class="n">Speed</th></tr>
+<tr><td>"So the decision is", "three action items", "to summarise", dates, amounts, percentages</td><td class="n">1.0x</td></tr>
+<tr><td>Ordinary discussion</td><td class="n">1.2x</td></tr>
+<tr><td>"Can you hear me", "give me a second", "let me share my screen"</td><td class="n">1.5x</td></tr>
+<tr><td>Silence with nothing happening on screen</td><td class="n">2.0x</td></tr>
+</table></div>
+<p>All four speeds are adjustable. For a call you only need the gist of, raise the ordinary speed to 1.5x and the silence to 3x.</p>
+
+<h2>Three ways to do it</h2>
+<h3>1. In the browser</h3>
+<p><a href="/?ref=speed-up-meeting-recordings">Upload the recording</a>, up to {{MAX_MINUTES}} minutes. The upload is deleted when processing ends and the result after 30 minutes. Suitable for calls that are not sensitive.</p>
+<h3>2. On your own computer</h3>
+<p>For long or confidential calls. Nothing leaves your machine and there is no length limit.</p>
+<pre>uvx --from git+https://github.com/andreolf/rubato rubato auto standup.mp4</pre>
+<h3>3. Through Claude or another agent</h3>
+<p>Install the skill and ask the agent to speed up the recording. It reads the transcript first, so it can keep the real decisions at normal speed even when nobody said the word "decision", and it can tell you what it slowed down for.</p>
+<pre>npx skills add andreolf/rubato</pre>
+
+<h2>Compared with a meeting summary</h2>
+<p>An AI summary is quicker to read, and it is one reader's account of what mattered. When the detail counts, such as who agreed to what or how a number was qualified, you want the recording itself. A dynamic-speed version is the recording, complete, in less time. The two work well together: read the summary, then watch the passages around the decisions.</p>
+
+<h2>Limits</h2>
+<ul>
+<li>Speakers are not identified; the speed depends on what is said, not who says it.</li>
+<li>The built-in phrases are English. For calls in other languages, use an agent to mark the passages.</li>
+<li>Heavy crosstalk transcribes poorly, so fewer passages are recognised.</li>
+</ul>
