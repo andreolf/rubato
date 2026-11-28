@@ -159,6 +159,48 @@ def page_view(request, path: str) -> None:
         track("view", path=path, v=visitor(request), ref=referrer(request))
 
 
+ACTIONS = ("seen", "engaged", "deep", "pick", "file", "sample", "err", "agents", "guide",
+           "github", "claude", "feedback", "copy", "leave")
+_sent = {"day": "", "n": collections.Counter()}
+
+
+def device(ua: str) -> str:
+    low = (ua or "").lower()
+    if "mobi" in low or "iphone" in low:
+        return "Phone"
+    if "ipad" in low or "android" in low or "tablet" in low:
+        return "Tablet"
+    return "Computer"
+
+
+def action(request, name: str, seconds=None) -> None:
+    """Something the page's own script reported: it ran, or a button was used."""
+    ua = request.headers.get("user-agent") or ""
+    if name not in ACTIONS or bot_name(ua):
+        return
+    v = visitor(request)
+    today = _day(time.time())
+    with _lock:                       # a page sends each action once; cap what one sender can write
+        if _sent["day"] != today:
+            _sent["day"], _sent["n"] = today, collections.Counter()
+        _sent["n"][v] += 1
+        if _sent["n"][v] > 60:
+            return
+    fields = {"a": name, "v": v}
+    if name == "seen":
+        fields["dev"] = device(ua)
+    if name == "leave":
+        try:
+            fields["s"] = max(0, min(int(seconds or 0), 3600))
+        except (TypeError, ValueError):
+            fields["s"] = 0
+    track("act", **fields)
+
+
+STAY = (("Under 10 seconds", 10), ("10 to 30 seconds", 30), ("30 seconds to 2 minutes", 120),
+        ("Over 2 minutes", 10 ** 9))
+
+
 def failure_reason(message: str, exc: Exception | None = None) -> str:
     low = (message or "").lower()
     if "up to" in low and "minutes" in low:
@@ -223,6 +265,9 @@ def stats(days: int = 30) -> dict:
     refs, bots, errors, langs, kinds = (collections.Counter() for _ in range(5))
     recent = collections.deque(maxlen=40)
     first_day = None
+    steps = {k: set() for k in ("seen", "engaged", "tried")}
+    actions, devices, stay = (collections.Counter() for _ in range(3))
+    steps_since = None
 
     for day, ev in _events():
         first_day = first_day or day
@@ -244,6 +289,22 @@ def stats(days: int = 30) -> dict:
                 refs[ev.get("ref") or "direct"] += 1
                 if v:
                     funnel["visited"].add((day, v))
+        elif kind == "act":
+            steps_since = steps_since or day
+            a = ev.get("a")
+            if not here:
+                continue
+            if a == "seen":
+                devices[ev.get("dev") or "Computer"] += 1
+            elif a == "leave":
+                secs = ev.get("s") or 0
+                stay[next(label for label, top in STAY if secs < top)] += 1
+            elif a != "engaged":
+                actions[a] += 1
+            if v:
+                key = "tried" if a in ("pick", "file", "sample") else a
+                if key in steps:
+                    steps[key].add((day, v))
         elif kind == "bot" and here:
             bots[ev.get("bot") or "Other bot"] += 1
         elif kind == "start":
@@ -284,15 +345,25 @@ def stats(days: int = 30) -> dict:
             if here and site and v:
                 funnel["downloaded"].add((day, v))
 
+    # the page-script steps only exist from the day they were first recorded, so once they
+    # do, the whole funnel counts from that day and every step describes the same visits
+    if steps_since:
+        funnel = {k: {x for x in s if x[0] >= steps_since} for k, s in funnel.items()}
     # only count funnel steps for visitors seen at the step before
     started = funnel["started"] & funnel["visited"]
     finished = funnel["finished"] & started
+    real = steps["seen"] & funnel["visited"]
+    engaged = steps["engaged"] & real
     out = {
         "range_days": days, "generated": int(time.time()), "first_day": first_day,
         "totals": totals, "previous": previous, "all_time": all_time,
         "days": [per_day[d] for d in dates],
         "funnel": {"visited": len(funnel["visited"]), "started": len(started),
-                   "finished": len(finished), "downloaded": len(funnel["downloaded"] & finished)},
+                   "finished": len(finished), "downloaded": len(funnel["downloaded"] & finished),
+                   "real": len(real), "engaged": len(engaged),
+                   "tried": len(steps["tried"] & real)},
+        "steps_since": steps_since, "actions": _top(actions, 20), "devices": _top(devices),
+        "stay": [[label, stay[label]] for label, _ in STAY if stay[label]],
         "referrers": _top(refs), "bots": _top(bots), "errors": _top(errors),
         "languages": _top(langs, 8), "kinds": _top(kinds),
         "recent": list(recent)[::-1],

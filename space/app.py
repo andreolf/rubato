@@ -13,6 +13,7 @@ import contextlib
 import hmac
 import importlib.util
 import ipaddress
+import json
 import os
 import socket
 import urllib.error
@@ -26,7 +27,7 @@ import uuid
 
 import metrics
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, "static")
@@ -415,6 +416,18 @@ async def index(request: Request):
 async def connector_docs(request: Request):
     metrics.page_view(request, "/connector")
     return page("connector.html")
+
+
+@app.post("/api/e")
+async def page_action(request: Request):
+    """The page's own script reports that it ran and which buttons were used. No content."""
+    try:
+        if int(request.headers.get("content-length") or 0) <= 200:
+            data = json.loads(await request.body())
+            metrics.action(request, str(data.get("a")), data.get("s"))
+    except Exception:
+        pass
+    return Response(status_code=204)
 
 
 @app.get("/privacy", response_class=HTMLResponse)
